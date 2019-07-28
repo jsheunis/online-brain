@@ -1,0 +1,75 @@
+<!doctype html>
+<html>
+    <head>
+        <title>OpenBrain Project Visualization Page</title>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    </head>
+    <body>
+          
+
+        <div class="container-fluid">
+            <h3>Basic settings</h3>
+            <form>
+                    <div class="form-group row">
+                        <label for="exp_name" class="col-sm-2 col-form-label">Experiment name</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="exp_name" placeholder="Experiment name">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group row">
+                            <label for="no_of_volumes" class="col-sm-2 col-form-label"># of volumes</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="no_of_volumes" placeholder="# of volumes">
+                            </div>
+                        </div>
+    
+                    <button type="button" class="btn btn-primary" data-toggle="collapse" data-target="#3D_viewer" id="startRTBtn">START RT</button>
+                    <button type="button" class="btn btn-danger" id="stopRTBtn">STOP RT</button>
+
+             </form>  
+
+            <div>
+                <canvas id="3Dviewer" class="_collapse">
+                <img id="spriteImg" class="hidden" src="{{ SPRITE_BG_IMAGE_B64 }}" alt="background">
+            </div>
+        </div>
+
+        <script type="text/javascript" src="{{ url_for('static', filename='brainsprite.min.js') }}"></script>       
+
+        <script>
+            $( window ).load(function() {
+                var sprite_params = {{ SPRITE_JSON_PARAMS | tojson}}; 
+                parsed_sprite_params = JSON.parse(sprite_params)
+                var brain = brainsprite(parsed_sprite_params);
+            });
+
+            var interval = null;
+            
+            $("#startRTBtn").click(getSpriteInterval);
+            $("#stopRTBtn").click(function() {
+                clearInterval(interval);
+            });
+
+            function getSpriteInterval() {
+                interval = setInterval(getSprite, 1500);
+            }
+
+            function getSprite() {
+                $.ajax({
+                    url: '/api/sprite',
+                    type: 'GET',
+                    success: function (response) {
+                        $("#spriteImg").attr("src", response);
+                    },
+                    error: function (error) {
+                        clearInterval(interval)
+                    }
+                });
+            }
+            </script>
+    </body>
+</html>
