@@ -74,7 +74,6 @@ function getSprite(imageID) {
         url: '/api/sprite/' + experimentName + '/' + imageID,
         type: 'GET',
         success: function (response) {
-            prevImageSuccesfullyRetrieved = true;
             $("#spriteImg").attr("src", response);
             lastValidImageID = currentImageID;
         },
