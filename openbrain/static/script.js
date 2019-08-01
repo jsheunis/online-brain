@@ -39,6 +39,7 @@ $("#btnSaveSettings").click(function() {
     // Update variables in global scope
     experimentName = $("#exp_name").val();
     maxNumberOfImages = $("#no_of_volumes").val();
+    repetitionTime = $("#repetition_time").val();
 
     // Send experiment name to server
     $.ajax({
