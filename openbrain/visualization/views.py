@@ -4,7 +4,7 @@ import json
 import time
 import logging
 
-from flask import Flask, request, send_file, make_response, render_template, jsonify, Blueprint
+from flask import request, render_template, jsonify, Blueprint, abort
 from io import BytesIO, StringIO
 from base64 import encodebytes
 from brainsprite import save_sprite
@@ -13,27 +13,16 @@ from typing import Dict
 from .config import SAMPLE_DATA_DIR, VOLUME_FILE_EXTENSION, TEST_DATA_DIR, VOLUME_FILE_NAME
 
 from ..models import GeneratedImage, db
+from .. import file_monitor
 
 visualization_bp = Blueprint('visualization_bp', __name__)
 
 new_image = nibabel.load(os.path.join(SAMPLE_DATA_DIR, VOLUME_FILE_NAME + VOLUME_FILE_EXTENSION))
 
-processed_files = []
-
-file_log = open(os.path.join(os.getcwd(), "file_log.txt"), "r")
-
-def follow(log_file):
-    while True:
-        line = log_file.readline()
-        stripped_line = line.rstrip()
-        yield stripped_line
-
-
 def generate_sprite_base64(volume):    
     generated_sprite = BytesIO()
     bg_json = StringIO()
-    save_sprite(volume, output_sprite=generated_sprite, output_json=bg_json, format='jpg')
-
+    save_sprite(volume, output_sprite=generated_sprite, output_json=bg_json, format='jpg', resample=True, cmap='Greys_r')
     generated_sprite.seek(0)
     bg_base64 = encodebytes(generated_sprite.read()).decode('utf-8')
     generated_sprite.close()
@@ -48,19 +37,18 @@ sprite_params = {
                     'canvas': '3Dviewer',
                     'sprite': 'spriteImg',
                     'nbSlice': params['nbSlice'],
-                    'colorBackground': '#ffffff',
+                    'colorBackground': '#000000',
                     'crosshair': True,
                     'affine': params['affine'],
                     'flagCoordinates': True,
                     'title': False,
-                    'flagValue': True,
-                    'colorFont': '#000000',
+                    'colorFont': '#ffffff',
                     'flagValue': False,
                     'colorCrosshair': '#de101d'
                 }
 
 def _create_generated_image_model(req_dict: Dict[int, str]):
-    image_model = GeneratedImage(experiment_id=req_dict['experiment_id'], 
+    image_model = GeneratedImage(experiment_name=req_dict['experiment_name'], 
                         volume_name=req_dict['volume_name'])
     return image_model
 
@@ -70,10 +58,11 @@ def index():
     return render_template('viz_base.html', SPRITE_BG_IMAGE_B64='data:image/png;base64,' + bg_sprite_b64, SPRITE_JSON_PARAMS=dumped_sprite_params)
 
 @visualization_bp.route('/api/fs-event', methods=['POST'])
-def get_fs_event():
+def post_fs_event():
         if request.method == 'POST':
             if request.is_json:
                 req_dict = request.get_json()
+                print(req_dict)
                 image_model = _create_generated_image_model(json.loads(req_dict))
                 
                 db.session.add(image_model)
@@ -88,59 +77,36 @@ def get_fs_event():
 
             return jsonify(success=False)
     
-def _get_first_unprocessed_image_entry():
-    entry = GeneratedImage.query.filter_by(processed_flag=False).first()
+def _get_image_entry_by_id(experiment_name, volume_id):
+    entry = GeneratedImage.query.filter_by(experiment_name=experiment_name, 
+                    volume_id=volume_id).first()
     return entry
 
-@visualization_bp.route('/api/sprite')
-def get_sprite():
+@visualization_bp.route('/api/sprite/<string:experiment_name>/<int:image_id>')
+def get_sprite(experiment_name, image_id):
     if request.method == 'GET':
-        entry = _get_first_unprocessed_image_entry()
+        entry = _get_image_entry_by_id(experiment_name, image_id)
+        print(entry)
         if entry is not None:
-            file_src = entry.volume_name
-            nb_image = nibabel.load(file_src)
-
-            # Mark the image as processed in the database
-            entry.processed_flag = True
-            db.session.commit()
-            processed_files.append(entry.volume_name)
-
+            image_src = entry.volume_name
+            nb_image = nibabel.load(image_src)
+            
             bg_sprite_b64, _ = generate_sprite_base64(nb_image)
             response = 'data:image/png;base64, {}'.format(bg_sprite_b64)
-            
+
             return response
-    
-    return jsonify(success=False)
+    return abort(404)
 
-        # if len(files) > 0:
-        #     image_src = files.pop(0)
-        #     image = nibabel.load(image_src)
-        #     bg_sprite_b64, _ = generate_sprite_base64(image)
-        #     response = 'data:image/png;base64, {}'.format(bg_sprite_b64)
-        #     return response
-        
-        # Get the generator object
-        #files = follow(file_log)
+@visualization_bp.route('/api/settings/<string:experiment_name>')
+def get_experiment_settings(experiment_name):
+    if request.method == 'GET':
+        # TODO: Add db checks for unique experiment name
 
-        #next_file = files.__next__()
-        #next_file.rstrip()
-        # Pass in order to avoid duplicate files
-        #if next_file not in processed_files:
-        #    processed_files.append(os.path.join(os.getcwd(), next_file))
-        
-        #print (processed_files)
-        
-        #if len(processed_files) > 0:
-        #    file_to_process = processed_files[0] 
-        #    processed_files.pop(0)
-        
-        #file_to_process = GeneratedImage.query.all()
-        #print(file_to_process)
+        # Initialize file system watcher
+        fs_watcher = file_monitor.Watcher()
 
-        #image_to_process = nibabel.load(file_to_process)
+        # Set file monitor JSON_DATA parameters
+        file_monitor.JSON_DATA['experiment_name'] = experiment_name
 
-        #bg_sprite_b64, _ = generate_sprite_base64(image_to_process)
-        
-        #response = 'data:image/png;base64, {}'.format(bg_sprite_b64)
-        
-        #return response
+        # Run file system watcher
+        fs_watcher.run()

@@ -5,7 +5,7 @@ DEFAULT_HOST = '0.0.0.0'
 DEFAULT_PORT = '8080'
 
 # Statement for enabling the development environment
-DEBUG = True
+DEBUG = False
 
 # Define the application directory
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))  

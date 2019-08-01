@@ -35,7 +35,6 @@ class Watcher:
         except:
             self.observer.stop()
             print("Error")
-            
         self.observer.join()
 
 class Handler(FileSystemEventHandler):
@@ -58,7 +57,3 @@ class Handler(FileSystemEventHandler):
                     logging.log(logging.INFO, r)
                 except Exception as e:
                     logging.log(logging.INFO, str(e))
-
-if __name__=='__main__':
-    w = Watcher()
-    w.run()

@@ -12,7 +12,7 @@ FILE_GENERATION_TIME = 4.0
 files = []
 for r, d, f in os.walk(INITIAL_DIRECTORY):
     for file in f:
-        if 'fanon-0007_' in file:
+        if '.nii' in file and 'fanon-0007_' in file:
             files.append(os.path.join(r, file))
 
 # Sort files according to their name in order to preserve order of generation
