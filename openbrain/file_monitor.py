@@ -11,7 +11,7 @@ DEFAULT_DIRECTORY_TO_WATCH = 'test_data/'
 DEFAULT_URL = 'http://0.0.0.0:8080/api/fs-event'
 
 JSON_DATA = {
-            "experiment_id": 1,
+            "experiment_name": 1,
             "volume_name": None
             }
 
@@ -49,16 +49,15 @@ class Handler(FileSystemEventHandler):
             return None
 
         elif event.event_type == 'created':
-            # Take any action here when a file is first created.
-            print("Received created event - %s." % event.src_path)
-            try:
-                #file_log = open("file_log.txt", "a")
-                #file_log.write(event.src_path + '\n')
-                JSON_DATA["volume_name"] = str(event.src_path)
-                r = requests.post(DEFAULT_URL, json=json.dumps(JSON_DATA), headers=REQ_HEADERS)
-                logging.log(logging.INFO, r)
-            except Exception as e:
-                logging.log(logging.INFO, str(e))
+            # Send a POST request if the file is not a hidden file (stating with '.')
+            if (str(event.src_path)[len(DEFAULT_DIRECTORY_TO_WATCH)] != '.'):
+                print("Received created event - %s." % event.src_path)
+                try:
+                    JSON_DATA["volume_name"] = str(event.src_path)
+                    r = requests.post(DEFAULT_URL, json=json.dumps(JSON_DATA), headers=REQ_HEADERS)
+                    logging.log(logging.INFO, r)
+                except Exception as e:
+                    logging.log(logging.INFO, str(e))
 
 if __name__=='__main__':
     w = Watcher()
