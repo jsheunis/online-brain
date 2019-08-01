@@ -8,6 +8,7 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
 DEFAULT_DIRECTORY_TO_WATCH = 'test_data/'
+
 DEFAULT_URL = 'http://0.0.0.0:8080/api/fs-event'
 
 JSON_DATA = {
@@ -19,28 +20,13 @@ REQ_HEADERS = {
             "Content-Type": "application/json"
             }
 
-class Watcher:
-
-    def __init__(self, directory_to_watch=DEFAULT_DIRECTORY_TO_WATCH):
-        self.observer = Observer()
-        self.DIRECTORY_TO_WATCH = directory_to_watch
-        
-    def run(self):
-        event_handler = Handler()
-        self.observer.schedule(event_handler, self.DIRECTORY_TO_WATCH, recursive=True)
-        self.observer.start()
-        try:
-            while True:
-                time.sleep(5)
-        except:
-            self.observer.stop()
-            print("Error")
-        self.observer.join()
+logger = logging.getLogger('viz_logger')
+logger.setLevel(logging.DEBUG)
 
 class Handler(FileSystemEventHandler):
 
     def __init__(self):
-        logging.info("Handler initialized")
+        logger.log(logging.INFO, "Handler initialized")
 
     @staticmethod
     def on_any_event(event):
@@ -54,6 +40,21 @@ class Handler(FileSystemEventHandler):
                 try:
                     JSON_DATA["volume_name"] = str(event.src_path)
                     r = requests.post(DEFAULT_URL, json=json.dumps(JSON_DATA), headers=REQ_HEADERS)
-                    logging.log(logging.INFO, r)
+                    logger.log(logging.INFO, r)
                 except Exception as e:
-                    logging.log(logging.INFO, str(e))
+                    logger.log(logging.INFO, str(e))
+
+observer = Observer()
+        
+def run():
+    event_handler = Handler()
+    observer.schedule(event_handler, DEFAULT_DIRECTORY_TO_WATCH, recursive=True)
+    observer.start()
+    
+    try:
+        while True:
+            time.sleep(5)
+    except:
+        observer.stop()
+        logger.log(logging.WARNING, "Error")
+    observer.join()

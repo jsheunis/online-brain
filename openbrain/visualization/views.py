@@ -71,7 +71,6 @@ def post_fs_event():
                 
                 try:
                     db.session.commit()
-                    print("Event added to the database")
                     logger.log(logging.INFO, "New file location added to the database")
                     return jsonify(success=True)
                 except Exception as ex:
@@ -81,8 +80,8 @@ def post_fs_event():
             return jsonify(success=False)
     
 def _get_image_entry_by_id(experiment_name, volume_id):
-    entry = GeneratedImage.query.filter_by(experiment_name=experiment_name, 
-                    volume_id=volume_id).first()
+    entries = GeneratedImage.query.filter_by(experiment_name=experiment_name).all()
+    entry = entries[volume_id - 1]
     return entry
 
 @visualization_bp.route('/api/sprite/<string:experiment_name>/<int:image_id>')
@@ -118,11 +117,7 @@ def get_experiment_settings(experiment_name):
                 logger.log(logging.WARN, "Failed adding experiment to database: " + str(ex))
             logger.log(logging.INFO, "Experiment added to database")
 
-        # Initialize file system watcher
-        fs_watcher = file_monitor.Watcher()
-
         # Set file monitor JSON_DATA parameters
         file_monitor.JSON_DATA['experiment_name'] = experiment_name
 
-        # Run file system watcher
-        fs_watcher.run()
+        return jsonify(success=True)

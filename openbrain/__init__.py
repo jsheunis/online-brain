@@ -1,9 +1,10 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from . import file_monitor
 
 import config
-
+import threading
 migrate = Migrate()
 
 
@@ -19,4 +20,9 @@ def create_app():
     from openbrain.visualization.views import visualization_bp
     app.register_blueprint(visualization_bp)
 
+    # Run file system watcher
+    fs_thread = threading.Thread(target=file_monitor.run)
+    fs_thread.daemon = True
+    fs_thread.start()
+    
     return app
