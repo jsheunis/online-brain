@@ -12,10 +12,13 @@ from typing import Dict
 
 from .config import SAMPLE_DATA_DIR, VOLUME_FILE_EXTENSION, TEST_DATA_DIR, VOLUME_FILE_NAME
 
-from ..models import GeneratedImage, db
+from ..models import GeneratedImage, Experiment, db
 from .. import file_monitor
 
 visualization_bp = Blueprint('visualization_bp', __name__)
+
+logger = logging.getLogger('viz_logger')
+logger.setLevel(logging.DEBUG)
 
 new_image = nibabel.load(os.path.join(SAMPLE_DATA_DIR, VOLUME_FILE_NAME + VOLUME_FILE_EXTENSION))
 
@@ -56,23 +59,23 @@ def _create_generated_image_model(req_dict: Dict[int, str]):
 def index():
     dumped_sprite_params = json.dumps(sprite_params)
     return render_template('viz_base.html', SPRITE_BG_IMAGE_B64='data:image/png;base64,' + bg_sprite_b64, SPRITE_JSON_PARAMS=dumped_sprite_params)
-
+ 
 @visualization_bp.route('/api/fs-event', methods=['POST'])
 def post_fs_event():
         if request.method == 'POST':
             if request.is_json:
                 req_dict = request.get_json()
-                print(req_dict)
                 image_model = _create_generated_image_model(json.loads(req_dict))
                 
                 db.session.add(image_model)
                 
                 try:
                     db.session.commit()
-                    logging.log(logging.INFO, "New file location added to the database")
+                    print("Event added to the database")
+                    logger.log(logging.INFO, "New file location added to the database")
                     return jsonify(success=True)
                 except Exception as ex:
-                    logging.log(logging.INFO, str(ex))
+                    logger.log(logging.WARNING, "Failed adding to the database: " + str(ex))
                     return jsonify(success=False)
 
             return jsonify(success=False)
@@ -100,7 +103,20 @@ def get_sprite(experiment_name, image_id):
 @visualization_bp.route('/api/settings/<string:experiment_name>')
 def get_experiment_settings(experiment_name):
     if request.method == 'GET':
-        # TODO: Add db checks for unique experiment name
+        def experiment_exists(experiment_name):
+            entry = Experiment.query.filter_by(experiment_name=experiment_name).first()
+            return entry is not None
+
+        if experiment_exists(experiment_name): 
+            logger.log(logging.WARNING, "Experiment already in database")
+        else:
+            experimentModel = Experiment(experiment_name=experiment_name)
+            try:
+                db.session.add(experimentModel)
+                db.session.commit()
+            except Exception as ex:
+                logger.log(logging.WARN, "Failed adding experiment to database: " + str(ex))
+            logger.log(logging.INFO, "Experiment added to database")
 
         # Initialize file system watcher
         fs_watcher = file_monitor.Watcher()
