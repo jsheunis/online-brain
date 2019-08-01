@@ -62,8 +62,10 @@ $("#btnSaveSettings").click(function() {
 
 function setSpriteInterval() {
     interval = setInterval(function() {
-        getSprite(currentImageID);
-        currentImageID++;
+        if (currentImageID < maxNumberOfImages) {
+            currentImageID = lastValidImageID + 1;
+            getSprite(currentImageID);
+        }
     }, repetitionTime);
 }
 
