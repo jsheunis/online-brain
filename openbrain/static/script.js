@@ -36,7 +36,7 @@ $("#prevBtn").click(function() {
 });
 
 $("#btnSaveSettings").click(function() {
-    if ($("#exp_name").val() != 0){
+    if ($("#exp_name").val()) {
         // Update variables in global scope
         experimentName = $("#exp_name").val();
         maxNumberOfImages = $("#no_of_volumes").val();

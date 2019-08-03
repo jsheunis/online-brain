@@ -47,7 +47,8 @@ sprite_params = {
                     'title': False,
                     'colorFont': '#ffffff',
                     'flagValue': False,
-                    'colorCrosshair': '#de101d'
+                    'colorCrosshair': '#de101d',
+                    'voxelSize': '1',
                 }
 
 def _create_generated_image_model(req_dict: Dict[int, str]):
