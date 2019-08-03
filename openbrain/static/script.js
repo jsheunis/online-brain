@@ -36,29 +36,32 @@ $("#prevBtn").click(function() {
 });
 
 $("#btnSaveSettings").click(function() {
-    // Update variables in global scope
-    experimentName = $("#exp_name").val();
-    maxNumberOfImages = $("#no_of_volumes").val();
-    repetitionTime = $("#repetition_time").val();
+    if ($("#exp_name").val() != 0){
+        // Update variables in global scope
+        experimentName = $("#exp_name").val();
+        maxNumberOfImages = $("#no_of_volumes").val();
+        repetitionTime = $("#repetition_time").val();          
+            
+        // Send experiment name to server
+        $.ajax({
+            url: '/api/settings/' + experimentName,
+            type: 'GET',
+            success: function (response) {
+                console.log("Settings updated");            
+            },
+            error: function (error) {
+                console.log(error);
+            }
+        });
 
-    // Send experiment name to server
-    $.ajax({
-        url: '/api/settings/' + experimentName,
-        type: 'GET',
-        success: function (response) {
-            console.log("Settings updated");            
-        },
-        error: function (error) {
-            console.log(error);
-        }
-    });
+        // Hide experiment settings
+        $("#settingsForm").attr("class", "d-none");
 
-    // Hide experiment settings
-    $("#settingsForm").attr("class", "d-none");
+        // Display visualization canvas and control buttons
+        $("#vizControlButtons").attr("class", ".d-block");
+        $("#vizCanvas").attr("class", ".d-block");
+    }
 
-    // Display visualization canvas and control buttons
-    $("#vizControlButtons").attr("class", ".d-block");
-    $("#vizCanvas").attr("class", ".d-block");
 });
 
 function setSpriteInterval() {
