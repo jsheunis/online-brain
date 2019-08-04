@@ -4,6 +4,7 @@ var maxNumberOfImages = 155; // hardcoded for now, will add a field to set this 
 var repetitionTime = 2000; // hardcoded for now, will add a field to set this later
 var experimentName;
 var lastValidImageID = 0;
+var maxValidImageID = 0;
 
 $("#startRTBtn").click(
     function(){
@@ -64,6 +65,11 @@ $("#btnSaveSettings").click(function() {
 
 });
 
+$("#volume-range-slider").on('input', function(elem) {
+    var currentSliderValue = $(this).val();
+    getSprite(currentSliderValue);
+});
+
 function setSpriteInterval() {
     interval = setInterval(function() {
         if (currentImageID < maxNumberOfImages) {
@@ -80,6 +86,13 @@ function getSprite(imageID) {
         success: function (response) {
             $("#spriteImg").attr("src", response);
             lastValidImageID = currentImageID;
+            
+            if(lastValidImageID > maxValidImageID) {
+                maxValidImageID = lastValidImageID;
+            }
+
+            $("#volume-range-slider").attr("max", maxValidImageID);
+            $("#volume-range-slider").val(imageID);
         },
         error: function (error) {
             clearInterval(interval);

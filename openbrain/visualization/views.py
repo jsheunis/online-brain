@@ -122,3 +122,4 @@ def get_experiment_settings(experiment_name):
         file_monitor.JSON_DATA['experiment_name'] = experiment_name
 
         return jsonify(success=True)
+        
