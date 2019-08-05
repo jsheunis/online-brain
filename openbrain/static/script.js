@@ -1,10 +1,16 @@
 var interval = null;
 var currentImageID = 0;
-var maxNumberOfImages = 155; // hardcoded for now, will add a field to set this later
-var repetitionTime = 2000; // hardcoded for now, will add a field to set this later
+var maxNumberOfImages = 155;
+var repetitionTime = 2000;
 var experimentName;
 var lastValidImageID = 0;
 var maxValidImageID = 0;
+var spriteUpdated = false;
+var sprite_params = {
+    canvas: '3Dviewer',
+    sprite: 'spriteImg',
+    nbSlice: { 'Y':100 , 'Z':100 },
+};
 
 $("#startRTBtn").click(
     function(){
@@ -31,7 +37,6 @@ $("#prevBtn").click(function() {
     if (currentImageID > 1) {
         currentImageID--;
         getSprite(currentImageID);
-        console.log("clicked on prev");
         console.log(currentImageID);
     }
 });
@@ -83,10 +88,16 @@ function getSprite(imageID) {
     $.ajax({
         url: '/api/sprite/' + experimentName + '/' + imageID,
         type: 'GET',
-        success: function (response) {
-            $("#spriteImg").attr("src", response);
+        success: function (response) {            
+            $("#spriteImg").attr("src", response.sprite_img);
             lastValidImageID = currentImageID;
-            
+
+            if (!spriteUpdated) {
+                sprite_params = response.sprite_params; 
+                var brain = brainsprite(sprite_params);
+                spriteUpdated = true;
+             }  
+
             if(lastValidImageID > maxValidImageID) {
                 maxValidImageID = lastValidImageID;
             }
