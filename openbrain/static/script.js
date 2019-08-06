@@ -107,14 +107,14 @@ function setSpriteInterval() {
 
 function updateCurrentBackgroundSprite(response, imageID, overlay=false, colormap=false) {
     $("#spriteImg").attr("src", response.sprite_img);
-    
-    //if (overlay) {
-        $("#overlayImg").attr("src", response.stat_map_b64);
-    //}    
 
-    //if (colormap) {
+    if (overlay === true) {
+        $("#overlayImg").attr("src", response.stat_map_b64);
+    }    
+
+    if (colormap === true) {
         $("#colorMap").attr("src", response.cm_b64);
-    //}
+    }
     
     lastValidImageID = currentImageID;
 
@@ -122,6 +122,7 @@ function updateCurrentBackgroundSprite(response, imageID, overlay=false, colorma
         sprite_params = response.sprite_params; 
         var brain = brainsprite(sprite_params);
         spriteUpdated = true;
+        console.log('updated sprite');
      }  
 
     if(lastValidImageID > maxValidImageID) {
@@ -150,7 +151,7 @@ function getSprite(imageID) {
             url: '/api/sprite/overlay/' + experimentName + '/' + imageID,
             type: 'GET',
             success: function (response) {       
-                updateCurrentBackgroundSprite(response, imageID, true, true) ;   
+                updateCurrentBackgroundSprite(response, imageID, true, false) ;   
             },
             error: function (error) {
                 clearInterval(interval);

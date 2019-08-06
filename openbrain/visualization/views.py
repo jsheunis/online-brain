@@ -11,6 +11,7 @@ from .config import SAMPLE_DATA_DIR, VOLUME_FILE_EXTENSION, ROI_FILE_NAME
 
 from ..models import GeneratedImage, Experiment, db
 from .. import file_monitor
+from ..cache import cache
 
 visualization_bp = Blueprint('visualization_bp', __name__)
 
@@ -59,6 +60,7 @@ def _get_image_entry_by_id(experiment_name, volume_id):
 
 
 @visualization_bp.route('/api/sprite/<string:experiment_name>/<int:image_id>')
+@cache.cached(timeout=600)
 def get_sprite(experiment_name, image_id):
     if request.method == 'GET':
         entry = _get_image_entry_by_id(experiment_name, image_id)
@@ -95,6 +97,7 @@ def get_sprite(experiment_name, image_id):
 
 
 @visualization_bp.route('/api/sprite/overlay/<string:experiment_name>/<int:image_id>')
+@cache.cached(timeout=600)
 def get_sprite_stat_map(experiment_name, image_id):
     if request.method == 'GET':
         entry = _get_image_entry_by_id(experiment_name, image_id)
