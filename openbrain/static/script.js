@@ -6,11 +6,18 @@ var experimentName;
 var lastValidImageID = 0;
 var maxValidImageID = 0;
 var spriteUpdated = false;
+var roiFileName;
+var displayMode = 'fMRI';
+
 var sprite_params = {
     canvas: '3Dviewer',
     sprite: 'spriteImg',
     nbSlice: { 'Y':100 , 'Z':100 },
 };
+
+$( document ).ready(function(){
+    $("#file-selector").addClass("d-none");
+});
 
 $("#startRTBtn").click(
     function(){
@@ -50,6 +57,7 @@ $("#btnSaveSettings").click(function() {
             
         // Send experiment name to server
         $.ajax({
+            // TODO: Change into a POST request with JSON params, where all settings (including overlay filename) are defined 
             url: '/api/settings/' + experimentName,
             type: 'GET',
             success: function (response) {
@@ -67,12 +75,25 @@ $("#btnSaveSettings").click(function() {
         $("#vizControlButtons").attr("class", ".d-block");
         $("#vizCanvas").attr("class", ".d-block");
     }
-
 });
 
 $("#volume-range-slider").on('input', function(elem) {
     var currentSliderValue = $(this).val();
     getSprite(currentSliderValue);
+});
+
+$("#mode-select").on('change', function() {
+    displayMode = this.value;
+    if (displayMode === 'overlay') {
+        $("#file-selector").addClass("d-block");
+    } else if (displayMode == 'fMRI') {
+        $("#file-selector").removeClass("d-block").addClass("d-none");
+    }
+});
+
+$("#roi_file").change(function(e) {
+    roiFileName = e.target.files[0].name;
+    $("label[for = customFile]").text(roiFileName);
 });
 
 function setSpriteInterval() {
@@ -84,30 +105,57 @@ function setSpriteInterval() {
     }, repetitionTime);
 }
 
+function updateCurrentBackgroundSprite(response, imageID, overlay=false, colormap=false) {
+    $("#spriteImg").attr("src", response.sprite_img);
+    
+    //if (overlay) {
+        $("#overlayImg").attr("src", response.stat_map_b64);
+    //}    
+
+    //if (colormap) {
+        $("#colorMap").attr("src", response.cm_b64);
+    //}
+    
+    lastValidImageID = currentImageID;
+
+    if (!spriteUpdated) {
+        sprite_params = response.sprite_params; 
+        var brain = brainsprite(sprite_params);
+        spriteUpdated = true;
+     }  
+
+    if(lastValidImageID > maxValidImageID) {
+        maxValidImageID = lastValidImageID;
+    }
+
+    $("#volume-range-slider").attr("max", maxValidImageID);
+    $("#volume-range-slider").val(imageID);
+}
+
 function getSprite(imageID) {
-    $.ajax({
-        url: '/api/sprite/' + experimentName + '/' + imageID,
-        type: 'GET',
-        success: function (response) {            
-            $("#spriteImg").attr("src", response.sprite_img);
-            lastValidImageID = currentImageID;
-
-            if (!spriteUpdated) {
-                sprite_params = response.sprite_params; 
-                var brain = brainsprite(sprite_params);
-                spriteUpdated = true;
-             }  
-
-            if(lastValidImageID > maxValidImageID) {
-                maxValidImageID = lastValidImageID;
+    if (displayMode === 'fMRI'){
+        $.ajax({
+            url: '/api/sprite/' + experimentName + '/' + imageID,
+            type: 'GET',
+            success: function (response) {       
+                updateCurrentBackgroundSprite(response, imageID) ;   
+            },
+            error: function (error) {
+                clearInterval(interval);
+                // TODO: Add bootstrap modal notification when the end is reached
             }
-
-            $("#volume-range-slider").attr("max", maxValidImageID);
-            $("#volume-range-slider").val(imageID);
-        },
-        error: function (error) {
-            clearInterval(interval);
-            // TODO: Add bootstrap modal notification when the end is reached
-        }
-    });
+        });
+    } else if (displayMode === 'overlay') {
+        $.ajax({
+            url: '/api/sprite/overlay/' + experimentName + '/' + imageID,
+            type: 'GET',
+            success: function (response) {       
+                updateCurrentBackgroundSprite(response, imageID, true, true) ;   
+            },
+            error: function (error) {
+                clearInterval(interval);
+                // TODO: Add bootstrap modal notification when the end is reached
+            }
+        });
+    } 
 }

@@ -1,12 +1,13 @@
 import nibabel
 import json
 import logging
+import os
 
 from flask import request, render_template, jsonify, Blueprint, abort
 from typing import Dict
 
 from .utils import get_stat_map, generate_background_sprite
-# from .config import SAMPLE_DATA_DIR, VOLUME_FILE_EXTENSION, ROI_FILE_NAME
+from .config import SAMPLE_DATA_DIR, VOLUME_FILE_EXTENSION, ROI_FILE_NAME
 
 from ..models import GeneratedImage, Experiment, db
 from .. import file_monitor
@@ -15,14 +16,6 @@ visualization_bp = Blueprint('visualization_bp', __name__)
 
 logger = logging.getLogger('viz_logger')
 logger.setLevel(logging.DEBUG)
-
-# Overlay image params
-# overlay_image = nibabel.load(os.path.join(
-#     SAMPLE_DATA_DIR, ROI_FILE_NAME + VOLUME_FILE_EXTENSION))
-# overlay_sprite_b64, overlay_sprite_json = generate_overlay_sprite(
-#     overlay_image)
-# overlay_sprite_json.seek(0)
-# overlay_params = json.load(overlay_sprite_json)
 
 
 def _create_generated_image_model(req_dict: Dict[int, str]):
@@ -33,12 +26,6 @@ def _create_generated_image_model(req_dict: Dict[int, str]):
 
 @visualization_bp.route('/')
 def index():
-    # sprite_params_v2, bg_sprite_b64, overlay_sprite_b64, colormap_b64 = get_stat_map(overlay_image, bg_img=new_image, opacity=0.6)
-    # dumped_sprite_params = json.dumps(sprite_params_v2)
-
-    # return render_template('viz_base.html', SPRITE_BG_IMAGE_B64='data:image/png;base64,' + bg_sprite_b64, SPRITE_JSON_PARAMS=dumped_sprite_params, SPRITE_OVERLAY_B64='data:image/png;base64,' + overlay_sprite_b64, COLORMAP_B64='data:image/png;base64,' + colormap_b64)
-
-    #dumped_sprite_params = json.dumps(sprite_params)
     return render_template('viz_base.html')
 
 
@@ -104,6 +91,30 @@ def get_sprite(experiment_name, image_id):
             sprite_params['affine'] = bg_params_json['affine']
 
             return jsonify(sprite_img=sprite_img, sprite_params=sprite_params)
+    return abort(404)
+
+
+@visualization_bp.route('/api/sprite/overlay/<string:experiment_name>/<int:image_id>')
+def get_sprite_stat_map(experiment_name, image_id):
+    if request.method == 'GET':
+        entry = _get_image_entry_by_id(experiment_name, image_id)
+        if entry is not None:
+            image_src = entry.volume_name
+            bg_image = nibabel.load(image_src)
+
+            # TODO: Remove hardcoded stat map path
+            stat_map_img = nibabel.load(os.path.join(
+                SAMPLE_DATA_DIR, ROI_FILE_NAME + VOLUME_FILE_EXTENSION))
+
+            # TODO: Decrease execution time in get_stat_map (currently 0.67 sec !!!)
+            import time
+            time_before = time.time()
+            sprite_params, bg_img_b64, stat_map_b64, cm_b64 = get_stat_map(
+                stat_map_img, bg_image, opacity=0.5, annotate=False, colorbar=False)
+            time_after = time.time()
+
+            print(time_after - time_before)
+            return jsonify(sprite_img='data:image/png;base64,' + bg_img_b64, sprite_params=sprite_params, stat_map_b64='data:image/png;base64,' + stat_map_b64, cm_b64='data:image/jpg;base64,' + cm_b64)
     return abort(404)
 
 

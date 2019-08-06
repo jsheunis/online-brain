@@ -333,14 +333,6 @@ def get_stat_map(stat_map_img, bg_img, cut_coords=None,
         if black_bg == 'auto':
             black_bg = False
 
-    # Set color parameters
-    if black_bg:
-        cfont = '#FFFFFF'
-        cbg = '#000000'
-    else:
-        cfont = '#000000'
-        cbg = '#FFFFFF'
-
     # Select coordinates for the cut
     # https://github.com/nilearn/nilearn/blob/master/nilearn/plotting/displays.py#L943
     if isinstance(cut_coords, numbers.Number):
@@ -384,7 +376,6 @@ def get_stat_map(stat_map_img, bg_img, cut_coords=None,
         stat_map_cm.close()
     else:
         cm_base64 = ''
-
     # Load the sprite meta-data from the json dump
     stat_map_json.seek(0)
     params = json.load(stat_map_json)
@@ -406,8 +397,8 @@ def get_stat_map(stat_map_img, bg_img, cut_coords=None,
             'nbSlice': params['nbSlice'],
             'opacity': opacity
         },
-        'colorBackground': cbg,
-        'colorFont': cfont,
+        'colorBackground': '#000000',
+        'colorFont': '#ffffff',
         'crosshair': draw_cross,
         'affine': params['affine'],
         'flagCoordinates': annotate,
