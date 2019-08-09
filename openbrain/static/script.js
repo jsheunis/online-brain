@@ -55,11 +55,12 @@ $("#btnSaveSettings").click(function() {
         maxNumberOfImages = $("#no_of_volumes").val();
         repetitionTime = $("#repetition_time").val();          
             
-        // Send experiment name to server
+        // Send experiment settings to server
         $.ajax({
-            // TODO: Change into a POST request with JSON params, where all settings (including overlay filename) are defined 
-            url: '/api/settings/' + experimentName,
-            type: 'GET',
+            url: '/api/settings',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ "experiment_name": experimentName, "display_mode": displayMode }),
             success: function (response) {
                 console.log("Settings updated");            
             },
@@ -107,7 +108,7 @@ function setSpriteInterval() {
 
 function updateCurrentBackgroundSprite(response, imageID, overlay=false, colormap=false) {
     $("#spriteImg").attr("src", response.sprite_img);
-
+    
     if (overlay === true) {
         $("#overlayImg").attr("src", response.stat_map_b64);
     }    
@@ -143,7 +144,6 @@ function getSprite(imageID) {
             },
             error: function (error) {
                 clearInterval(interval);
-                // TODO: Add bootstrap modal notification when the end is reached
             }
         });
     } else if (displayMode === 'overlay') {
@@ -151,11 +151,10 @@ function getSprite(imageID) {
             url: '/api/sprite/overlay/' + experimentName + '/' + imageID,
             type: 'GET',
             success: function (response) {       
-                updateCurrentBackgroundSprite(response, imageID, true, false) ;   
+                updateCurrentBackgroundSprite(response, imageID, true, true) ;   
             },
             error: function (error) {
                 clearInterval(interval);
-                // TODO: Add bootstrap modal notification when the end is reached
             }
         });
     } 
