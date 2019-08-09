@@ -1,16 +1,13 @@
-import nibabel
 import json
 import logging
-import os
-
-from flask import request, render_template, jsonify, Blueprint, abort
 from typing import Dict
 
-from .config import DisplayMode
+from flask import Blueprint, abort, jsonify, render_template, request
 
-from ..models import GeneratedImage, Experiment, db
 from .. import file_monitor
 from ..cache import cache
+from ..models import Experiment, GeneratedImage, db
+from . import config
 
 visualization_bp = Blueprint('visualization_bp', __name__)
 
@@ -57,6 +54,7 @@ def post_fs_event():
 
 
 def _get_image_entry_by_id(experiment_name, volume_id):
+    # TODO: Handle case when no entry is found (id = -1 or 0)
     entries = GeneratedImage.query.filter_by(
         experiment_name=experiment_name).all()
     entry = entries[volume_id - 1]
@@ -142,12 +140,13 @@ def get_experiment_settings():
 
             # Set file monitor JSON_DATA parameters
             file_monitor.JSON_DATA['experiment_name'] = req_dict['experiment_name']
-            
+
             # Set file monitor display_mode
             if req_dict['display_mode'] == 'fMRI':
-                file_monitor.display_mode = DisplayMode.FMRI
+                file_monitor.display_mode = config.DisplayMode.FMRI
             elif req_dict['display_mode'] == 'overlay':
-                file_monitor.display_mode = DisplayMode.OVERLAY
-
+                file_monitor.display_mode = config.DisplayMode.OVERLAY
+                file_monitor.ROI_FILE_NAME = req_dict['overlay_filename']
+                
             return jsonify(success=True)
         return jsonify(success=False)

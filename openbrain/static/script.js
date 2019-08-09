@@ -6,7 +6,7 @@ var experimentName;
 var lastValidImageID = 0;
 var maxValidImageID = 0;
 var spriteUpdated = false;
-var roiFileName;
+var roiFileName = null;
 var displayMode = 'fMRI';
 
 var sprite_params = {
@@ -49,6 +49,7 @@ $("#prevBtn").click(function() {
 });
 
 $("#btnSaveSettings").click(function() {
+    // TODO: Handle case when filename is empty
     if ($("#exp_name").val()) {
         // Update variables in global scope
         experimentName = $("#exp_name").val();
@@ -60,7 +61,7 @@ $("#btnSaveSettings").click(function() {
             url: '/api/settings',
             type: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify({ "experiment_name": experimentName, "display_mode": displayMode }),
+            data: JSON.stringify({ "experiment_name": experimentName, "display_mode": displayMode, "overlay_filename": roiFileName }),
             success: function (response) {
                 console.log("Settings updated");            
             },

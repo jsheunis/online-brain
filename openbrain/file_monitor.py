@@ -6,7 +6,7 @@ import nibabel
 import os
 
 from .visualization import utils
-from .visualization.config import DisplayMode, SAMPLE_DATA_DIR, ROI_FILE_NAME, VOLUME_FILE_EXTENSION
+from .visualization.config import DisplayMode, SAMPLE_DATA_DIR
 
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
@@ -27,6 +27,8 @@ JSON_DATA = {
 REQ_HEADERS = {
     "Content-Type": "application/json"
 }
+
+ROI_FILE_NAME = ''
 
 display_mode = DisplayMode.FMRI
 
@@ -62,7 +64,8 @@ class Handler(FileSystemEventHandler):
                         bg_image = nibabel.load(event.src_path)
                         stat_map_img = nibabel.load(os.path.join(
                             SAMPLE_DATA_DIR,
-                            ROI_FILE_NAME + VOLUME_FILE_EXTENSION))
+                            ROI_FILE_NAME))
+                        print(ROI_FILE_NAME)
                         sprite_json, sprite_b64, stat_map_b64, colormap_b64 = utils.get_stat_map(
                             stat_map_img, bg_image, opacity=0.7, annotate=True, colorbar=True)
                         JSON_DATA["volume_name"] = str(event.src_path)
@@ -70,7 +73,7 @@ class Handler(FileSystemEventHandler):
                         JSON_DATA["sprite_json"] = json.dumps(sprite_json)
                         JSON_DATA["stat_map_b64"] = stat_map_b64
                         JSON_DATA["colormap_b64"] = colormap_b64
-
+                        
                     r = requests.post(DEFAULT_URL, json=json.dumps(
                         JSON_DATA), headers=REQ_HEADERS)
 
