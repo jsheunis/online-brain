@@ -156,6 +156,7 @@ function addNewTrace(voxel_coordinates) {
         Plotly.plot('voxel_value_graph', [{
             y: Object.values(response.voxel_values),
             mode: 'lines',
+            name: '(' + parseInt(voxel_coordinates['x']) + ', ' + parseInt(voxel_coordinates['y']) + ', ' + parseInt(voxel_coordinates['z']) + ')',
             line: {color: randomColor}
         }]);
     });

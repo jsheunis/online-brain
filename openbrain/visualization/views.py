@@ -37,16 +37,6 @@ def _convert_real_world_to_voxel_coordinates(image: nibabel.nifti1.Nifti1Image, 
 
     return voxel_coords
 
-
-def _get_voxel_data_json(image_src):
-    image = nibabel.load(image_src)
-    voxel_data = image.get_data()
-    voxel_data_list = voxel_data.tolist()
-    file = open('voxel_data_json.txt', 'w')
-    file.write(json.dumps(voxel_data_list))
-    # return json.dumps(voxel_data_list)
-    return voxel_data_list
-
 @visualization_bp.route('/')
 def index():
     return render_template('viz_base.html')
@@ -113,8 +103,6 @@ def get_sprite(experiment_name, image_id):
 
             sprite_params['nbSlice'] = bg_params_json['nbSlice']
             sprite_params['affine'] = bg_params_json['affine']
-
-            # test = _get_voxel_data_json(entry.volume_name)
 
             return jsonify(sprite_img=sprite_img, sprite_params=sprite_params)
 
@@ -189,7 +177,11 @@ def _get_voxel_value_table(experiment_name, image_id, real_world_coordinates_lis
             image = nibabel.load(image_entry.volume_name)
             image_data = image.get_data()
             voxel_coordinates = _convert_real_world_to_voxel_coordinates(image, real_world_coordinates_list)
-            voxel_values[id] = image_data[voxel_coordinates[0], voxel_coordinates[1], voxel_coordinates[2]]
+
+            try:
+                voxel_values[id] = image_data[voxel_coordinates[0], voxel_coordinates[1], voxel_coordinates[2]]
+            except IndexError:
+                voxel_values[id] = 0
 
     return voxel_values
 
@@ -212,5 +204,4 @@ def post_voxel_value():
 
             voxel_values = _get_voxel_value_table(experiment_name, image_id, real_world_coordinates_list)
 
-            print(voxel_values)
             return jsonify(voxel_values=voxel_values)
