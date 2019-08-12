@@ -19,7 +19,7 @@ function initBrain (params) {
       title: false,
       numSlice: false,
       onclick: '',
-      opacity: 1
+      opacity: 0.6
     }
     var brain = Object.assign({}, defaultParams, params)
   

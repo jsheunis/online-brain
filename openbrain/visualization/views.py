@@ -1,6 +1,10 @@
 import json
 import logging
-from typing import Dict
+import nibabel
+import numpy as np
+
+from typing import Dict, List
+from collections import OrderedDict
 
 from flask import Blueprint, abort, jsonify, render_template, request
 
@@ -25,6 +29,23 @@ def _create_generated_image_model(req_dict: Dict[int, str]):
                                  colormap_b64=req_dict['colormap_b64'])
     return image_model
 
+
+def _convert_real_world_to_voxel_coordinates(image: nibabel.nifti1.Nifti1Image, coordinates) -> List[int]:
+    voxel_coords = nibabel.affines.apply_affine(
+        np.linalg.inv(image.affine), coordinates)
+    voxel_coords = [int(coord) for coord in voxel_coords]
+
+    return voxel_coords
+
+
+def _get_voxel_data_json(image_src):
+    image = nibabel.load(image_src)
+    voxel_data = image.get_data()
+    voxel_data_list = voxel_data.tolist()
+    file = open('voxel_data_json.txt', 'w')
+    file.write(json.dumps(voxel_data_list))
+    # return json.dumps(voxel_data_list)
+    return voxel_data_list
 
 @visualization_bp.route('/')
 def index():
@@ -54,10 +75,13 @@ def post_fs_event():
 
 
 def _get_image_entry_by_id(experiment_name, volume_id):
-    # TODO: Handle case when no entry is found (id = -1 or 0)
-    entries = GeneratedImage.query.filter_by(
-        experiment_name=experiment_name).all()
-    entry = entries[volume_id - 1]
+    try:
+        entries = GeneratedImage.query.filter_by(
+            experiment_name=experiment_name).all()
+        entry = entries[volume_id - 1]
+    except IndexError:
+        entry = None
+
     return entry
 
 
@@ -66,7 +90,6 @@ def _get_image_entry_by_id(experiment_name, volume_id):
 def get_sprite(experiment_name, image_id):
     if request.method == 'GET':
         entry = _get_image_entry_by_id(experiment_name, image_id)
-        print(entry)
         if entry is not None:
             bg_sprite_b64 = entry.sprite_b64
             bg_params = entry.sprite_json
@@ -91,7 +114,10 @@ def get_sprite(experiment_name, image_id):
             sprite_params['nbSlice'] = bg_params_json['nbSlice']
             sprite_params['affine'] = bg_params_json['affine']
 
+            # test = _get_voxel_data_json(entry.volume_name)
+
             return jsonify(sprite_img=sprite_img, sprite_params=sprite_params)
+
     return abort(404)
 
 
@@ -111,11 +137,12 @@ def get_sprite_stat_map(experiment_name, image_id):
                            sprite_params=sprite_params,
                            stat_map_b64='data:image/png;base64,' + stat_map_b64,
                            cm_b64='data:image/jpg;base64,' + colormap_b64)
+
     return abort(404)
 
 
 @visualization_bp.route('/api/settings', methods=['POST'])
-def get_experiment_settings():
+def post_experiment_settings():
     if request.method == 'POST':
         if request.is_json:
             req_dict = request.get_json()
@@ -147,6 +174,43 @@ def get_experiment_settings():
             elif req_dict['display_mode'] == 'overlay':
                 file_monitor.display_mode = config.DisplayMode.OVERLAY
                 file_monitor.ROI_FILE_NAME = req_dict['overlay_filename']
-                
+
             return jsonify(success=True)
+
         return jsonify(success=False)
+
+
+def _get_voxel_value_table(experiment_name, image_id, real_world_coordinates_list):
+    voxel_values = OrderedDict()
+
+    for id in range(1, image_id + 1):
+        image_entry = _get_image_entry_by_id(experiment_name, id)
+        if image_entry is not None:
+            image = nibabel.load(image_entry.volume_name)
+            image_data = image.get_data()
+            voxel_coordinates = _convert_real_world_to_voxel_coordinates(image, real_world_coordinates_list)
+            voxel_values[id] = image_data[voxel_coordinates[0], voxel_coordinates[1], voxel_coordinates[2]]
+
+    return voxel_values
+
+
+@visualization_bp.route('/api/voxel', methods=['POST'])
+def post_voxel_value():
+    if request.method == 'POST':
+        if request.is_json:
+            req_dict = request.get_json()
+
+            experiment_name = req_dict['experiment_name']
+            image_id = req_dict['image_id']
+            voxel_coordinates = req_dict['voxel_coordinates']
+
+            coordinate_x = voxel_coordinates['x'][0]
+            coordinate_y = voxel_coordinates['y'][0]
+            coordinate_z = voxel_coordinates['z'][0]
+
+            real_world_coordinates_list = [coordinate_x, coordinate_y, coordinate_z]
+
+            voxel_values = _get_voxel_value_table(experiment_name, image_id, real_world_coordinates_list)
+
+            print(voxel_values)
+            return jsonify(voxel_values=voxel_values)

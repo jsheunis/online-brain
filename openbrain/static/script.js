@@ -8,19 +8,26 @@ var maxValidImageID = 0;
 var spriteUpdated = false;
 var roiFileName = null;
 var displayMode = 'fMRI';
+var currentTraceID = 0;
+var brain;
 
 var sprite_params = {
     canvas: '3Dviewer',
     sprite: 'spriteImg',
-    nbSlice: { 'Y':100 , 'Z':100 },
+    nbSlice: { 'Y':1 , 'Z':1 },
 };
 
 $( document ).ready(function(){
     $("#file-selector").addClass("d-none");
 });
 
+$( window ).load(function(){
+    brain = brainsprite(sprite_params);
+});
+
+
 $("#startRTBtn").click(
-    function(){
+    function() {
         if (currentImageID < maxNumberOfImages) {
             setSpriteInterval();
         } else {
@@ -36,7 +43,6 @@ $("#nextBtn").click(function() {
     if (currentImageID < maxNumberOfImages) {
         currentImageID = lastValidImageID + 1;            
         getSprite(currentImageID);
-        console.log(currentImageID);
     }
 });
 
@@ -44,7 +50,6 @@ $("#prevBtn").click(function() {
     if (currentImageID > 1) {
         currentImageID--;
         getSprite(currentImageID);
-        console.log(currentImageID);
     }
 });
 
@@ -75,7 +80,6 @@ $("#btnSaveSettings").click(function() {
 
         // Display visualization canvas and control buttons
         $("#vizControlButtons").attr("class", ".d-block");
-        $("#vizCanvas").attr("class", ".d-block");
     }
 });
 
@@ -108,8 +112,8 @@ function setSpriteInterval() {
 }
 
 function updateCurrentBackgroundSprite(response, imageID, overlay=false, colormap=false) {
-    $("#spriteImg").attr("src", response.sprite_img);
-    
+     $("#spriteImg").attr("src", response.sprite_img);
+
     if (overlay === true) {
         $("#overlayImg").attr("src", response.stat_map_b64);
     }    
@@ -117,16 +121,27 @@ function updateCurrentBackgroundSprite(response, imageID, overlay=false, colorma
     if (colormap === true) {
         $("#colorMap").attr("src", response.cm_b64);
     }
-    
+
     lastValidImageID = currentImageID;
+    $("#spriteImg").load(function() {
+        if (!spriteUpdated) {
+            sprite_params = response.sprite_params;
 
-    if (!spriteUpdated) {
-        sprite_params = response.sprite_params; 
-        var brain = brainsprite(sprite_params);
-        spriteUpdated = true;
-        console.log('updated sprite');
-     }  
-
+            sprite_params.onclick = function() {
+                let voxel_coordinates = {
+                    x: this.coordinatesSlice.X,
+                    y: this.coordinatesSlice.Y,
+                    z: this.coordinatesSlice.Z
+                };
+                addNewTrace(voxel_coordinates);
+                currentTraceID++;
+            };
+            brain = brainsprite(sprite_params);
+            spriteUpdated = true;
+            console.log('updated sprite');
+         }
+    });
+    $("#vizCanvas").attr("class", ".d-block");
     if(lastValidImageID > maxValidImageID) {
         maxValidImageID = lastValidImageID;
     }
@@ -135,13 +150,46 @@ function updateCurrentBackgroundSprite(response, imageID, overlay=false, colorma
     $("#volume-range-slider").val(imageID);
 }
 
+function addNewTrace(voxel_coordinates) {
+    var randomColor = "#000000".replace(/0/g,function(){return (~~(Math.random()*16)).toString(16);});
+    getVoxelValue(voxel_coordinates, function(response) {
+        Plotly.plot('voxel_value_graph', [{
+            y: Object.values(response.voxel_values),
+            mode: 'lines',
+            line: {color: randomColor}
+        }]);
+    });
+}
+
+function extendCurrentTrace(trace_id, voxel_coordinates) {
+            if (trace_id === 0){
+                addNewTrace(voxel_coordinates);
+                currentTraceID++;
+                console.log('added new trace');
+            } else {
+                getVoxelValue(voxel_coordinates, function(response) {
+                    y_value = response.voxel_values[currentImageID - 1];
+                    Plotly.extendTraces('voxel_value_graph', {
+                        y: [[ y_value ]]
+                    }, [trace_id - 1]);
+                    console.log('extended trace', trace_id - 1);
+                });
+            }
+}
+
 function getSprite(imageID) {
     if (displayMode === 'fMRI'){
         $.ajax({
             url: '/api/sprite/' + experimentName + '/' + imageID,
             type: 'GET',
             success: function (response) {       
-                updateCurrentBackgroundSprite(response, imageID) ;   
+                updateCurrentBackgroundSprite(response, imageID);
+                let voxel_coordinates = {
+                    x: brain.coordinatesSlice.X,
+                    y: brain.coordinatesSlice.Y,
+                    z: brain.coordinatesSlice.Z
+                    };
+                extendCurrentTrace(currentTraceID, voxel_coordinates);
             },
             error: function (error) {
                 clearInterval(interval);
@@ -159,4 +207,19 @@ function getSprite(imageID) {
             }
         });
     } 
+}
+
+function getVoxelValue(voxel_coordinates, success_callback) {
+    return $.ajax({
+        url: '/api/voxel',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ "experiment_name": experimentName, "image_id": currentImageID, "voxel_coordinates": voxel_coordinates }),
+        success: function (response) {
+            success_callback(response);
+        },
+        error: function (error) {
+            console.log(error);
+        }
+    });
 }
