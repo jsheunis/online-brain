@@ -123,6 +123,7 @@ function updateCurrentBackgroundSprite(response, imageID, overlay=false, colorma
     }
 
     lastValidImageID = currentImageID;
+
     $("#spriteImg").load(function() {
         if (!spriteUpdated) {
             sprite_params = response.sprite_params;
@@ -141,6 +142,7 @@ function updateCurrentBackgroundSprite(response, imageID, overlay=false, colorma
             console.log('updated sprite');
          }
     });
+
     $("#vizCanvas").attr("class", ".d-block");
     if(lastValidImageID > maxValidImageID) {
         maxValidImageID = lastValidImageID;
@@ -148,6 +150,8 @@ function updateCurrentBackgroundSprite(response, imageID, overlay=false, colorma
 
     $("#volume-range-slider").attr("max", maxValidImageID);
     $("#volume-range-slider").val(imageID);
+
+    document.getElementById("volumeNumber").innerHTML = currentImageID;
 }
 
 function addNewTrace(voxel_coordinates) {
