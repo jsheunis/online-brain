@@ -20,7 +20,6 @@ logger.setLevel(logging.DEBUG)
 
 
 def _create_generated_image_model(req_dict: Dict[int, str]):
-
     image_model = GeneratedImage(experiment_name=req_dict['experiment_name'],
                                  volume_name=req_dict['volume_name'],
                                  sprite_b64=req_dict['sprite_b64'],
@@ -30,12 +29,14 @@ def _create_generated_image_model(req_dict: Dict[int, str]):
     return image_model
 
 
-def _convert_real_world_to_voxel_coordinates(image: nibabel.nifti1.Nifti1Image, coordinates) -> List[int]:
+def _convert_real_world_to_voxel_coordinates(image: nibabel.nifti1.Nifti1Image,
+                                             coordinates) -> List[int]:
     voxel_coords = nibabel.affines.apply_affine(
         np.linalg.inv(image.affine), coordinates)
     voxel_coords = [int(coord) for coord in voxel_coords]
 
     return voxel_coords
+
 
 @visualization_bp.route('/')
 def index():
@@ -99,7 +100,7 @@ def get_sprite(experiment_name, image_id):
                 'flagValue': False,
                 'colorCrosshair': '#de101d',
                 'voxelSize': '1',
-            }
+                }
 
             sprite_params['nbSlice'] = bg_params_json['nbSlice']
             sprite_params['affine'] = bg_params_json['affine']
@@ -151,10 +152,12 @@ def post_experiment_settings():
                     logger.log(logging.INFO, "Experiment added to database")
                 except Exception as ex:
                     logger.log(
-                        logging.WARN, "Failed adding experiment to database: " + str(ex))
+                        logging.WARN, "Failed adding experiment to database: "
+                                      + str(ex))
 
             # Set file monitor JSON_DATA parameters
-            file_monitor.JSON_DATA['experiment_name'] = req_dict['experiment_name']
+            file_monitor.JSON_DATA['experiment_name'] = \
+                req_dict['experiment_name']
 
             # Set file monitor display_mode
             if req_dict['display_mode'] == 'fMRI':
@@ -168,7 +171,8 @@ def post_experiment_settings():
         return jsonify(success=False)
 
 
-def _get_voxel_value_table(experiment_name, image_id, real_world_coordinates_list):
+def _get_voxel_value_table(experiment_name, image_id,
+                           real_world_coordinates_list):
     voxel_values = OrderedDict()
 
     for id in range(1, image_id + 1):
@@ -176,10 +180,14 @@ def _get_voxel_value_table(experiment_name, image_id, real_world_coordinates_lis
         if image_entry is not None:
             image = nibabel.load(image_entry.volume_name)
             image_data = image.get_data()
-            voxel_coordinates = _convert_real_world_to_voxel_coordinates(image, real_world_coordinates_list)
+            voxel_coordinates = _convert_real_world_to_voxel_coordinates(
+                image,
+                real_world_coordinates_list)
 
             try:
-                voxel_values[id] = image_data[voxel_coordinates[0], voxel_coordinates[1], voxel_coordinates[2]]
+                voxel_values[id] = image_data[voxel_coordinates[0],
+                                              voxel_coordinates[1],
+                                              voxel_coordinates[2]]
             except IndexError:
                 voxel_values[id] = 0
 
@@ -200,8 +208,11 @@ def post_voxel_value():
             coordinate_y = voxel_coordinates['y'][0]
             coordinate_z = voxel_coordinates['z'][0]
 
-            real_world_coordinates_list = [coordinate_x, coordinate_y, coordinate_z]
+            real_world_coordinates_list = [coordinate_x,
+                                           coordinate_y,
+                                           coordinate_z]
 
-            voxel_values = _get_voxel_value_table(experiment_name, image_id, real_world_coordinates_list)
+            voxel_values = _get_voxel_value_table(experiment_name, image_id,
+                                                  real_world_coordinates_list)
 
             return jsonify(voxel_values=voxel_values)
