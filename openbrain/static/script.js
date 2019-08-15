@@ -232,7 +232,13 @@ function getSprite(imageID) {
             url: '/api/sprite/overlay/' + experimentName + '/' + imageID,
             type: 'GET',
             success: function (response) {       
-                updateCurrentBackgroundSprite(response, imageID, true, true) ;   
+                updateCurrentBackgroundSprite(response, imageID, true, true);
+                let voxel_coordinates = {
+                    x: brain.coordinatesSlice.X,
+                    y: brain.coordinatesSlice.Y,
+                    z: brain.coordinatesSlice.Z
+                    };
+                extendCurrentTrace(currentTraceID, voxel_coordinates);
             },
             error: function (error) {
                 console.log('id' + image_id + ' not found');
