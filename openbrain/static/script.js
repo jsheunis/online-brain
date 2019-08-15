@@ -105,6 +105,13 @@ $("#roi_file").change(function(e) {
     $("label[for = customFile]").text(roiFileName);
 });
 
+// "Not found" Modal buttons
+$("#stopRTModalButton").click(() => {
+    clearInterval(interval);
+    $('#not-found-modal').modal('hide');
+});
+
+
 function setSpriteInterval() {
     interval = setInterval(function() {
         if (currentImageID < maxNumberOfImages) {
@@ -209,7 +216,8 @@ function getSprite(imageID) {
                 extendCurrentTrace(currentTraceID, voxel_coordinates);
             },
             error: function (error) {
-                clearInterval(interval);
+                console.log('id' + imageID + ' not found');
+                $('#not-found-modal').modal('show');
             }
         });
     } else if (displayMode === 'overlay') {
@@ -220,7 +228,8 @@ function getSprite(imageID) {
                 updateCurrentBackgroundSprite(response, imageID, true, true) ;   
             },
             error: function (error) {
-                clearInterval(interval);
+                console.log('id' + image_id + ' not found');
+                $('#not-found-modal').modal('show');
             }
         });
     } 

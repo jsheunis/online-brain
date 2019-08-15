@@ -78,11 +78,31 @@
                     <div id="voxel_value_graph"></div>
                 </div>
             </div>
-
         </div>
 
-        <script type="text/javascript" src="{{ url_for('static', filename='brainsprite.js') }}"></script>
+        <!-- Modal -->
+        <div class="modal fade" id="not-found-modal" tabindex="-1" role="dialog" aria-labelledby="modal-label" aria-hidden="true">
+          <div class="modal-dialog" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="modal-label">Volume not found</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                  <p>Volume not found. Do you want to continue checking for new images or to stop the real time experiment?</p>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-danger" id="stopRTModalButton">STOP RT</button>
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Continue checking</button>
+              </div>
+            </div>
+          </div>
+        </div>
 
+
+        <script type="text/javascript" src="{{ url_for('static', filename='brainsprite.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static', filename='script.js') }}"> </script>
     </body>
 </html>
