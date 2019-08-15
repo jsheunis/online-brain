@@ -1,0 +1,6 @@
+digraph preproc{
+  label="preproc";
+  preproc_realign[label="realign (spm)"];
+  preproc_smooth[label="smooth (spm)"];
+  preproc_realign -> preproc_smooth;
+}

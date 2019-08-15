@@ -1,0 +1,82 @@
+/Users/jheunis/miniconda3/envs/rtfmri-dev/lib/python3.7/site-packages/sklearn/externals/joblib/__init__.py:15: DeprecationWarning: sklearn.externals.joblib is deprecated in 0.21 and will be removed in 0.23. Please import this functionality directly from joblib, which can be installed with: pip install joblib. If this warning is raised when loading pickled models, you may need to re-serialize those models with scikit-learn 0.21+.
+  warnings.warn(msg, category=DeprecationWarning)
+ * Serving Flask app "openbrain" (lazy loading)
+ * Environment: production
+   WARNING: This is a development server. Do not use it in a production deployment.
+   Use a production WSGI server instead.
+ * Debug mode: on
+ * Running on http://0.0.0.0:8080/ (Press CTRL+C to quit)
+ * Restarting with fsevents reloader
+/Users/jheunis/miniconda3/envs/rtfmri-dev/lib/python3.7/site-packages/sklearn/externals/joblib/__init__.py:15: DeprecationWarning: sklearn.externals.joblib is deprecated in 0.21 and will be removed in 0.23. Please import this functionality directly from joblib, which can be installed with: pip install joblib. If this warning is raised when loading pickled models, you may need to re-serialize those models with scikit-learn 0.21+.
+  warnings.warn(msg, category=DeprecationWarning)
+ * Debugger is active!
+ * Debugger PIN: 205-212-534
+127.0.0.1 - - [29/Jul/2019 21:21:55] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [29/Jul/2019 21:22:09] "GET /api/sprite HTTP/1.1" 500 -
+Traceback (most recent call last):
+  File "/Users/jheunis/miniconda3/envs/rtfmri-dev/lib/python3.7/site-packages/sqlalchemy/engine/base.py", line 1244, in _execute_context
+    cursor, statement, parameters, context
+  File "/Users/jheunis/miniconda3/envs/rtfmri-dev/lib/python3.7/site-packages/sqlalchemy/engine/default.py", line 552, in do_execute
+    cursor.execute(statement, parameters)
+sqlite3.OperationalError: no such table: generated_image
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/jheunis/miniconda3/envs/rtfmri-dev/lib/python3.7/site-packages/flask/app.py", line 2463, in __call__
+    return self.wsgi_app(environ, start_response)
+  File "/Users/jheunis/miniconda3/envs/rtfmri-dev/lib/python3.7/site-packages/flask/app.py", line 2449, in wsgi_app
+    response = self.handle_exception(e)
+  File "/Users/jheunis/miniconda3/envs/rtfmri-dev/lib/python3.7/site-packages/flask/app.py", line 1866, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "/Users/jheunis/miniconda3/envs/rtfmri-dev/lib/python3.7/site-packages/flask/_compat.py", line 39, in reraise
+    raise value
+  File "/Users/jheunis/miniconda3/envs/rtfmri-dev/lib/python3.7/site-packages/flask/app.py", line 2446, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/Users/jheunis/miniconda3/envs/rtfmri-dev/lib/python3.7/site-packages/flask/app.py", line 1951, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/Users/jheunis/miniconda3/envs/rtfmri-dev/lib/python3.7/site-packages/flask/app.py", line 1820, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "/Users/jheunis/miniconda3/envs/rtfmri-dev/lib/python3.7/site-packages/flask/_compat.py", line 39, in reraise
+    raise value
+  File "/Users/jheunis/miniconda3/envs/rtfmri-dev/lib/python3.7/site-packages/flask/app.py", line 1949, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/Users/jheunis/miniconda3/envs/rtfmri-dev/lib/python3.7/site-packages/flask/app.py", line 1935, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File "/Users/jheunis/Documents/PYTHON/online-brain/openbrain/visualization/views.py", line 98, in get_sprite
+    entry = _get_first_unprocessed_image_entry()
+  File "/Users/jheunis/Documents/PYTHON/online-brain/openbrain/visualization/views.py", line 92, in _get_first_unprocessed_image_entry
+    entry = GeneratedImage.query.filter_by(processed_flag=False).first()
+  File "/Users/jheunis/miniconda3/envs/rtfmri-dev/lib/python3.7/site-packages/sqlalchemy/orm/query.py", line 3228, in first
+    ret = list(self[0:1])
+  File "/Users/jheunis/miniconda3/envs/rtfmri-dev/lib/python3.7/site-packages/sqlalchemy/orm/query.py", line 3018, in __getitem__
+    return list(res)
+  File "/Users/jheunis/miniconda3/envs/rtfmri-dev/lib/python3.7/site-packages/sqlalchemy/orm/query.py", line 3330, in __iter__
+    return self._execute_and_instances(context)
+  File "/Users/jheunis/miniconda3/envs/rtfmri-dev/lib/python3.7/site-packages/sqlalchemy/orm/query.py", line 3355, in _execute_and_instances
+    result = conn.execute(querycontext.statement, self._params)
+  File "/Users/jheunis/miniconda3/envs/rtfmri-dev/lib/python3.7/site-packages/sqlalchemy/engine/base.py", line 988, in execute
+    return meth(self, multiparams, params)
+  File "/Users/jheunis/miniconda3/envs/rtfmri-dev/lib/python3.7/site-packages/sqlalchemy/sql/elements.py", line 287, in _execute_on_connection
+    return connection._execute_clauseelement(self, multiparams, params)
+  File "/Users/jheunis/miniconda3/envs/rtfmri-dev/lib/python3.7/site-packages/sqlalchemy/engine/base.py", line 1107, in _execute_clauseelement
+    distilled_params,
+  File "/Users/jheunis/miniconda3/envs/rtfmri-dev/lib/python3.7/site-packages/sqlalchemy/engine/base.py", line 1248, in _execute_context
+    e, statement, parameters, cursor, context
+  File "/Users/jheunis/miniconda3/envs/rtfmri-dev/lib/python3.7/site-packages/sqlalchemy/engine/base.py", line 1466, in _handle_dbapi_exception
+    util.raise_from_cause(sqlalchemy_exception, exc_info)
+  File "/Users/jheunis/miniconda3/envs/rtfmri-dev/lib/python3.7/site-packages/sqlalchemy/util/compat.py", line 398, in raise_from_cause
+    reraise(type(exception), exception, tb=exc_tb, cause=cause)
+  File "/Users/jheunis/miniconda3/envs/rtfmri-dev/lib/python3.7/site-packages/sqlalchemy/util/compat.py", line 152, in reraise
+    raise value.with_traceback(tb)
+  File "/Users/jheunis/miniconda3/envs/rtfmri-dev/lib/python3.7/site-packages/sqlalchemy/engine/base.py", line 1244, in _execute_context
+    cursor, statement, parameters, context
+  File "/Users/jheunis/miniconda3/envs/rtfmri-dev/lib/python3.7/site-packages/sqlalchemy/engine/default.py", line 552, in do_execute
+    cursor.execute(statement, parameters)
+sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such table: generated_image
+[SQL: SELECT generated_image.volume_id AS generated_image_volume_id, generated_image.experiment_id AS generated_image_experiment_id, generated_image.volume_name AS generated_image_volume_name, generated_image.processed_flag AS generated_image_processed_flag
+FROM generated_image
+WHERE generated_image.processed_flag = 0
+ LIMIT ? OFFSET ?]
+[parameters: (1, 0)]
+(Background on this error at: http://sqlalche.me/e/e3q8)

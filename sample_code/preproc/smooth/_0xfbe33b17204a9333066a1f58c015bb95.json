@@ -1,0 +1,31 @@
+[
+    [
+        "fwhm",
+        "6.0000000000"
+    ],
+    [
+        "in_files",
+        [
+            [
+                "/Users/jheunis/Documents/PYTHON/online-brain/sample_code/preproc/realign/rfanon-0007_00001.nii",
+                "bcd142c3a18f0d35ef8c6754eed60b67"
+            ],
+            [
+                "/Users/jheunis/Documents/PYTHON/online-brain/sample_code/preproc/realign/rfanon-0007_00002.nii",
+                "bcd142c3a18f0d35ef8c6754eed60b67"
+            ]
+        ]
+    ],
+    [
+        "mfile",
+        true
+    ],
+    [
+        "out_prefix",
+        "s"
+    ],
+    [
+        "use_v8struct",
+        true
+    ]
+]

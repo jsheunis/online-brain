@@ -1,0 +1,6 @@
+digraph structs {
+node [shape=record];
+preprocrealign [label="{IN}|{ realign | spm |  }|{OUT|<outrealignedfiles> realigned_files}"];
+preprocsmooth [label="{IN|<ininfiles> in_files}|{ smooth | spm |  }|{OUT}"];
+preprocrealign:outrealignedfiles:e -> preprocsmooth:ininfiles:w;
+}
