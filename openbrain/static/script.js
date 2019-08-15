@@ -15,7 +15,15 @@ var prevBtnPressed = false;
 var sprite_params = {
     canvas: '3Dviewer',
     sprite: 'spriteImg',
-    nbSlice: { 'Y':1 , 'Z':1 },
+    nbSlice: {"X": 74, "Y": 84, "Z": 65},
+    min: 0.0,
+    max: 1269.0,
+    affine: [
+         [2.9729700088500977, 0.0, 0.0, -106.54425907135008],
+         [0.0, 2.9729700088500977, 0.0, -119.65008878707886],
+         [0.0, 0.0, 2.9729700088500977, -70.0960693359375],
+         [0.0, 0.0, 0.0, 1.0]
+    ],
 };
 
 $( document ).ready(function(){
@@ -82,7 +90,7 @@ $("#btnSaveSettings").click(function() {
 
         // Display visualization canvas and control buttons
         $("#vizControlButtons").attr("class", ".d-block");
-
+        $("#vizCanvas").attr("class", ".d-block");
     }
 });
 
@@ -153,7 +161,6 @@ function updateCurrentBackgroundSprite(response, imageID, overlay=false, colorma
          }
     });
 
-    $("#vizCanvas").attr("class", ".d-block");
     if(lastValidImageID > maxValidImageID) {
         maxValidImageID = lastValidImageID;
     }
