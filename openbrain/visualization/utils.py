@@ -1,28 +1,28 @@
-'''
-Significant parts of this code are retrieved from the brainsprite.py repository: 
+"""
+Parts of this code are retrieved from the brainsprite.py repository
 https://github.com/brainsprite/brainsprite.py
-'''
+"""
 
-import warnings
-import numpy as np
-from base64 import encodebytes
 import json
-
-import nibabel as nb
 import numbers
-from nilearn.plotting import cm
+import warnings
+from base64 import encodebytes
+from io import BytesIO, StringIO
+
+import matplotlib.pyplot as plt
+import nibabel as nb
+import numpy as np
 from matplotlib import cm as mpl_cm
 from matplotlib import colors
-from nilearn._utils.niimg import _safe_get_data
-from nilearn._utils.extmath import fast_abs_percentile
-import matplotlib.pyplot as plt
 from matplotlib.image import imsave
-from nilearn.plotting.img_plotting import _load_anat
-from nilearn.plotting.img_plotting import _get_colorbar_and_data_ranges
-from nilearn._utils import check_niimg_3d
 from nilearn import image
-from io import BytesIO, StringIO
+from nilearn._utils import check_niimg_3d
+from nilearn._utils.extmath import fast_abs_percentile
+from nilearn._utils.niimg import _safe_get_data
+from nilearn.plotting import cm
 from nilearn.plotting.find_cuts import find_xyz_cut_coords
+from nilearn.plotting.img_plotting import _get_colorbar_and_data_ranges
+from nilearn.plotting.img_plotting import _load_anat
 
 
 def _resample_to_self(img, interpolation):
@@ -182,7 +182,7 @@ def save_sprite(img, output_sprite, output_cmap=None, output_json=None,
         if isinstance(output_json, str):
             f = open(output_json, 'w')
             f.write(json.dumps(params))
-            f.close
+            f.close()
         else:
             output_json.write(json.dumps(params))
 
@@ -422,10 +422,17 @@ def get_stat_map(stat_map_img, bg_img, cut_coords=None,
 
 
 def generate_background_sprite(volume):
+    """
+
+    :param volume: A 3D Niimg-like object
+    :return: The sprite image encoded in base64 and sprite's JSON params
+    """
     generated_sprite = BytesIO()
     bg_json = StringIO()
+
     save_sprite(volume, output_sprite=generated_sprite,
                 output_json=bg_json, format='jpg', resample=True, cmap='Greys_r')
+
     generated_sprite.seek(0)
     bg_base64 = encodebytes(generated_sprite.read()).decode('utf-8')
     generated_sprite.close()

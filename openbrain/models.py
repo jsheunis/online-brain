@@ -1,5 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 
+# Define the SQLAlchemy instance here in order to avoid circular imports
 db = SQLAlchemy()
 
 
@@ -19,8 +20,6 @@ class GeneratedImage(db.Model):
 class Experiment(db.Model):
     experiment_id = db.Column(db.Integer, primary_key=True)
     experiment_name = db.Column(db.String(128), index=True, unique=True)
-
-    # TODO: Add all the additional experiment settings here
 
     def __repr__(self):
         return '<Experiment {}>'.format(self.experiment_name)
