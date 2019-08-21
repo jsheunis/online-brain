@@ -20,6 +20,9 @@ var sprite_params = {
     nbSlice: {"X": 74, "Y": 84, "Z": 65},
     min: 0.0,
     max: 1269.0,
+    colorCrosshair: "#de101d",
+    flagCoordinates: true,
+    crosshair: true,
     affine: [
          [2.9729700088500977, 0.0, 0.0, -106.54425907135008],
          [0.0, 2.9729700088500977, 0.0, -119.65008878707886],
