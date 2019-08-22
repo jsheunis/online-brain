@@ -7,6 +7,7 @@ from typing import List
 from flask import Blueprint, jsonify, request, abort
 
 from ..common import _get_image_entry_by_id
+from ..cache import cache
 
 plotting_bp = Blueprint('plotting_bp', __name__)
 
@@ -14,6 +15,7 @@ logger = logging.getLogger('plotting_logger')
 logger.setLevel(logging.DEBUG)
 
 
+@cache.memoize(300)
 def _convert_real_world_to_voxel_coordinates(image: nibabel.nifti1.Nifti1Image,
                                              coordinates) -> List[int]:
     """
@@ -30,6 +32,7 @@ def _convert_real_world_to_voxel_coordinates(image: nibabel.nifti1.Nifti1Image,
     return voxel_coords
 
 
+@cache.memoize(600)
 def _get_voxel_value_table(experiment_name, image_id,
                            real_world_coordinates_list):
     """
