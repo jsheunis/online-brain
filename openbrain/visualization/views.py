@@ -7,11 +7,14 @@ from flask import Blueprint, abort, jsonify, request
 from ..cache import cache
 from ..models import GeneratedImage, db
 from ..common import _get_image_entry_by_id
+from ..file_copy_script import MRIFileSimulator
 
 visualization_bp = Blueprint('visualization_bp', __name__)
 
 logger = logging.getLogger('viz_logger')
 logger.setLevel(logging.DEBUG)
+
+mri_simulator = None
 
 
 def _create_generated_image_model(req_dict: Dict[str, str]):
@@ -90,7 +93,7 @@ def get_sprite(experiment_name, image_id):
                 'flagValue': False,
                 'colorCrosshair': '#de101d',
                 'voxelSize': '1',
-                }
+            }
 
             sprite_params['nbSlice'] = bg_params_json['nbSlice']
             sprite_params['affine'] = bg_params_json['affine']
@@ -102,7 +105,8 @@ def get_sprite(experiment_name, image_id):
     return abort(404)
 
 
-@visualization_bp.route('/api/sprite/overlay/<string:experiment_name>/<int:image_id>')
+@visualization_bp.route(
+    '/api/sprite/overlay/<string:experiment_name>/<int:image_id>')
 @cache.cached(timeout=600)
 def get_sprite_stat_map(experiment_name, image_id):
     if request.method == 'GET':
@@ -124,3 +128,14 @@ def get_sprite_stat_map(experiment_name, image_id):
                            cm_b64='data:image/jpg;base64,' + colormap_b64)
 
     return abort(404)
+
+
+@visualization_bp.route('/api/sim/<int:repetition_time>/<int:num_of_volumes>',
+                        methods=['GET'])
+def start_real_time_simulation(repetition_time, num_of_volumes):
+    if request.method == 'GET':
+        mri_simulator = MRIFileSimulator(repetition_time, num_of_volumes)
+        mri_simulator.run()
+        return jsonify(success=True)
+    else:
+        abort(405)

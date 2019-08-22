@@ -130,6 +130,23 @@ $("#btnSaveSettings").click(function() {
 
 });
 
+
+// "Start RT Simulation" button
+$("#startRTSimBtn").click(function() {
+    $.ajax({
+        url: "/api/sim/" + repetitionTime + "/" + maxNumberOfImages,
+        type: "GET",
+        success: function (response) {
+            console.log("Started RT simulation script", $(this));
+            $("#startRTSimBtn").attr("disabled", true);
+            $("#stopRTSimBtn").attr("disabled", false);
+        },
+        error: function (error) {
+            console.log(error);
+        }
+    });
+});
+
 /* ***************************************************************************
  * Slider, dropdown select and file selector control
  * ***************************************************************************/
