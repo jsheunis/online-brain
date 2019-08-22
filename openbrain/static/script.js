@@ -64,8 +64,8 @@ $("#stopRTBtn").click(function() {
 // NEXT button
 $("#nextBtn").click(function() {
     if (currentImageID < maxNumberOfImages) {
-        currentImageID = lastValidImageID + 1;
-        getSprite(currentImageID);
+    currentImageID = lastValidImageID + 1;
+    getSprite(currentImageID);
     }
 });
 
@@ -132,8 +132,14 @@ $("#btnSaveSettings").click(function() {
  * ***************************************************************************/
 
 $("#volume-range-slider").on("input", function(elem) {
-    var currentSliderValue = $(this).val();
-    getSprite(currentSliderValue);
+    // Get value and convert it from String to Int
+    var currentSliderValue = parseInt($(this).val());
+    if (currentSliderValue < currentImageID) {
+        clearInterval(interval);
+        prevBtnPressed = true;
+    }
+    currentImageID = currentSliderValue;
+    getSprite(currentImageID);
 });
 
 
@@ -336,7 +342,7 @@ var updateCurrentBackgroundSprite = (response,
     }
 
     // Update volume range slider
-    $("#volume-range-slider").attr("max", maxValidImageID);
+    $("#volume-range-slider").attr("max", maxNumberOfImages);
     $("#volume-range-slider").val(imageID);
 
     // Display the current volume number

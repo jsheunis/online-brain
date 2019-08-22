@@ -4,7 +4,7 @@ import logging
 
 from collections import OrderedDict
 from typing import List
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, abort
 
 from ..common import _get_image_entry_by_id
 
@@ -46,33 +46,38 @@ def _get_voxel_value_table(experiment_name, image_id,
      smaller than the id of the current image
     """
     voxel_values = OrderedDict()
-
+    image_id = int(image_id)
     for id_iter in range(1, image_id + 1):
         # Get volume from database
         image_entry = _get_image_entry_by_id(experiment_name, id_iter)
         if image_entry is not None:
-            # Load the volume
-            image = nibabel.load(image_entry.volume_name)
-
-            # Get the voxel data from the image
-            image_data = image.get_data()
-
-            # Convert the real world coordinates to voxel coordinates
-            voxel_coordinates = _convert_real_world_to_voxel_coordinates(
-                image,
-                real_world_coordinates_list)
-
             try:
-                # Build the voxel values list
-                voxel_values[id_iter] = image_data[voxel_coordinates[0],
-                                                   voxel_coordinates[1],
-                                                   voxel_coordinates[2]]
-            except IndexError:
-                # If some coordinates that do not exist are entered, then
-                # return 0. This case happens due to the fact that the
-                # 'brainsprite' library displays additional space around the
-                # brain image.
-                voxel_values[id_iter] = 0
+                # Load the volume
+                image = nibabel.load(image_entry.volume_name)
+
+                # Get the voxel data from the image
+                image_data = image.get_data()
+
+                # Convert the real world coordinates to voxel coordinates
+                voxel_coordinates = _convert_real_world_to_voxel_coordinates(
+                    image,
+                    real_world_coordinates_list)
+
+                try:
+                    # Build the voxel values list
+                    voxel_values[id_iter] = image_data[voxel_coordinates[0],
+                                                       voxel_coordinates[1],
+                                                       voxel_coordinates[2]]
+                except IndexError:
+                    # If some coordinates that do not exist are entered, then
+                    # return 0. This case happens due to the fact that the
+                    # 'brainsprite' library displays additional space around
+                    #  the brain image.
+                    voxel_values[id_iter] = 0
+            except FileNotFoundError:
+                # This can occur whenever an old experiment is accessed and
+                # the Nifti files are not present anymore in the directory
+                return None
 
     return voxel_values
 
@@ -99,5 +104,7 @@ def post_voxel_value():
             # Get the voxel values at the specified coordinates
             voxel_values = _get_voxel_value_table(experiment_name, image_id,
                                                   real_world_coordinates_list)
-
-            return jsonify(voxel_values=voxel_values)
+            if voxel_values is not None:
+                return jsonify(voxel_values=voxel_values)
+            else:
+                abort(404)
