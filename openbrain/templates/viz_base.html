@@ -13,7 +13,8 @@
 
         <div class="container-fluid">
             <form class="d-block" id="settingsForm">
-                    <h3>Basic settings</h3>
+                    <h3>Experiment settings</h3>
+                    <h6>Create a new experiment</h6>
                     <div class="form-group row">
                         <label for="exp_name" class="col-sm-2 col-form-label">Experiment name</label>
                         <div class="col-sm-10">
@@ -48,6 +49,19 @@
                         <div id="file-selector" class="custom-file col-sm-10">
                             <input type="file" class="custom-file-input" id="roi_file">
                             <label class="custom-file-label" for="customFile">Choose overlay file</label>
+                        </div>
+                    </div>
+
+                    <h6>Load an existing experiment</h6>
+                    <div class="form-group row">
+                        <label for="exp-dropdown" class="col-sm-2 col-form-label">Experiment name</label>
+                        <div class="col-sm-10">
+                            <select class="custom-select custom-select-sm" id="exp-dropdown">
+                                <option value="none" selected>...</option>
+                                {% for exp in exp_list %}
+                                <option value="{{ exp }}">{{ exp }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
                     </div>
 
@@ -789,6 +803,6 @@ CiiigAooooAKKKKACiiigAooooAKKKKAP//Z
 
 
         <script type="text/javascript" src="{{ url_for('static', filename='brainsprite.js') }}"></script>
-        <script type="text/javascript" src="{{ url_for('static', filename='script.js') }}"> </script>
+        <script type="text/javascript" src="{{ url_for('static', filename='openbrain.js') }}"> </script>
     </body>
 </html>
