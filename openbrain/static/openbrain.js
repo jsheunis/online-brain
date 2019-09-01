@@ -233,6 +233,15 @@ var extendCurrentTrace = (trace_id, voxel_coordinates) => {
     }
 }
 
+
+var triggerHoverOnPlot = (imageID) => {
+    let pointNumber = parseInt(imageID) - 1;
+    Plotly.Fx.hover('voxel_value_graph', [
+        { curveNumber: 0, pointNumber: pointNumber },
+    ]);
+}
+
+
 /* ***************************************************************************
  * Data retrieval functions
  * ***************************************************************************/
@@ -254,6 +263,7 @@ var getSprite = (imageID) => {
                     };
 
                 extendCurrentTrace(currentTraceID, voxel_coordinates);
+                triggerHoverOnPlot(currentImageID);
             },
             error: function (error) {
                 // If an image is not found, then show modal
