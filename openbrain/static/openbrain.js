@@ -189,12 +189,13 @@ var addNewTrace = (voxel_coordinates) => {
         showlegend: true,
         xaxis: {
             title: {
-            text: "Volumes",
-            font: {
-              size: 18,
-              color: '#7f7f7f'
-            },
-          },
+                text: "Volumes",
+                font: {
+                    size: 18,
+                    color: '#7f7f7f'
+                },
+             },
+            range: [1, maxNumberOfImages],
         },
         yaxis: {
             title: {
