@@ -185,7 +185,27 @@ var addNewTrace = (voxel_coordinates) => {
                     parseInt(voxel_coordinates.y) + ', ' +
                     parseInt(voxel_coordinates.z) + ')',
             line: {color: randomColor}
-        }]);
+        }], {
+        showlegend: true,
+        xaxis: {
+            title: {
+            text: "Volumes",
+            font: {
+              size: 18,
+              color: '#7f7f7f'
+            },
+          },
+        },
+        yaxis: {
+            title: {
+                text: "Analog units",
+                font: {
+                    size: 18,
+                    color: '#7f7f7f'
+                }
+            },
+        },
+        });
     });
 }
 
