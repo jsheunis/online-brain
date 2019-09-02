@@ -10,6 +10,7 @@ var roiFileName = null;
 var prevBtnPressed = false;
 var displayMode = "fMRI";
 var currentTraceID = 0;
+var previousPoint;
 var brain;
 var experimentName;
 
@@ -73,6 +74,7 @@ $("#nextBtn").click(function() {
 // PREVIOUS button
 $("#prevBtn").click(function() {
     if (currentImageID > 1) {
+        previousPoint = currentImageID;
         currentImageID--;
         getSprite(currentImageID);
         prevBtnPressed = true;
@@ -137,6 +139,7 @@ $("#volume-range-slider").on("input", function(elem) {
     if (currentSliderValue < currentImageID) {
         clearInterval(interval);
         prevBtnPressed = true;
+        previousPoint = currentImageID;
     }
     currentImageID = currentSliderValue;
     getSprite(currentImageID);
@@ -214,7 +217,7 @@ var addNewTrace = (voxel_coordinates) => {
 var extendCurrentTrace = (trace_id, voxel_coordinates) => {
     // Allow the extension on the x-axis only when the previous button has not
     // been pressed
-    if(!prevBtnPressed){
+    if(!prevBtnPressed || currentImageID > previousPoint){
             if (trace_id === 0){
                 // If no trace has been added yet, then add a new one
                 addNewTrace(voxel_coordinates);
