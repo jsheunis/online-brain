@@ -4,11 +4,15 @@ app modules
 """
 
 from enum import Enum
+from flask_migrate import Migrate
+
 from .models import GeneratedImage
 
 SAMPLE_DATA_DIR = 'sample_data/'
 
 TEST_DATA_DIR = 'test_data/'
+
+migrate = Migrate()
 
 
 class DisplayMode(Enum):

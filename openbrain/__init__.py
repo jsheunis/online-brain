@@ -1,28 +1,22 @@
 from flask import Flask
-from flask_migrate import Migrate
 from . import file_monitor
 
-import config
 import threading
 from .cache import cache
 
-migrate = Migrate()
 
-
-def create_app():
+def create_app(configObject):
     """
     Application factory method
     """
 
     app = Flask(__name__)
 
-    # Add SQLAlchemy configuration to the app config
-    app.config['SQLALCHEMY_DATABASE_URI'] = config.SQLALCHEMY_DATABASE_URI
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = \
-        config.SQLALCHEMY_TRACK_MODIFICATIONS
+    app.config.from_object(configObject)
 
     # Initialize application extensions
     from openbrain.models import db
+    from openbrain.common import migrate
 
     db.init_app(app)
     migrate.init_app(app, db)
