@@ -108,6 +108,8 @@ $("#btnSaveSettings").click(function() {
                 contentType: "application/json",
                 data: JSON.stringify({
                                         "experiment_name": experimentName,
+                                        "repetition_time": repetitionTime,
+                                        "number_of_volumes": maxNumberOfImages,
                                         "display_mode": displayMode,
                                         "overlay_filename": roiFileName
                                         }),
@@ -148,7 +150,7 @@ $("#startRTSimBtn").click(function() {
 });
 
 /* ***************************************************************************
- * Slider, dropdown select and file selector control
+ * Slider, mode dropdown select, file selector control and experiment select
  * ***************************************************************************/
 
 $("#volume-range-slider").on("input", function(elem) {
@@ -178,6 +180,27 @@ $("#mode-select").on("change", function() {
 $("#roi_file").change(function(e) {
     roiFileName = e.target.files[0].name;
     $("label[for = customFile]").text(roiFileName);
+});
+
+
+$("#exp-dropdown").on("change", function() {
+    selectedExperiment = this.value;
+
+    if(selectedExperiment !== "none") {
+        $.ajax({
+            url: '/api/settings/' + selectedExperiment,
+            type: 'GET',
+            success: function (response) {
+                // Set values in corresponding fields
+                $("#exp_name").val(selectedExperiment);
+                $("#no_of_volumes").val(response.exp_volumes_nr);
+                $("#repetition_time").val(response.exp_repetition_time);
+            },
+            error: function (error) {
+                console.log('Error occurred while retrieving experiment data: ' + error);
+            }
+        });
+    }
 });
 
 
