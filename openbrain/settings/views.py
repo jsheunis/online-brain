@@ -1,6 +1,6 @@
 import logging
 
-from flask import Blueprint, jsonify, render_template, request
+from flask import Blueprint, jsonify, render_template, request, abort
 
 from .. import common
 from .. import file_monitor
@@ -12,10 +12,22 @@ logger = logging.getLogger('settings_logger')
 logger.setLevel(logging.DEBUG)
 
 
+def _get_all_experiments_from_database():
+    """
+    Retrieves all experiments from the database
+    :return: exp_name_list, a list containing only the experiment names
+    """
+    exp_data = Experiment.query.all()
+    exp_name_list = [exp.experiment_name for exp in exp_data]
+
+    return exp_name_list
+
+
 @settings_bp.route('/')
 def index():
     # Renders the index page
-    return render_template('viz_base.html')
+    exp_list = _get_all_experiments_from_database()
+    return render_template('viz_base.html', exp_list=exp_list)
 
 
 @settings_bp.route('/api/settings', methods=['POST'])
@@ -41,7 +53,9 @@ def post_experiment_settings():
             else:
                 # If the experiment is new, create an experiment model
                 experiment_model = Experiment(
-                    experiment_name=req_dict['experiment_name'])
+                    experiment_name=req_dict['experiment_name'],
+                    number_of_volumes=req_dict['number_of_volumes'],
+                    repetition_time=req_dict['repetition_time'])
                 try:
                     # Push the experiment to the database
                     db.session.add(experiment_model)
@@ -67,3 +81,28 @@ def post_experiment_settings():
 
         return jsonify(success=False)
 
+
+def _get_exp_data_from_database(exp_name):
+    """
+    Returns the experiment object from the database with all the data
+    :param exp_name: The name of the experiment
+    :return: experiment: The Experiment object
+    """
+
+    experiment = Experiment.query.filter_by(experiment_name=exp_name).first()
+    return experiment
+
+
+@settings_bp.route('/api/settings/<string:exp_name>', methods=['GET'])
+def get_experiment_settings(exp_name):
+    if request.method == 'GET':
+        # Get experiment data from database
+        exp_data = _get_exp_data_from_database(exp_name)
+
+        if exp_data is not None:
+            exp_volumes_nr = exp_data.number_of_volumes
+            exp_repetition_time = exp_data.repetition_time
+
+            return jsonify(exp_volumes_nr=exp_volumes_nr,
+                           exp_repetition_time=exp_repetition_time)
+        abort(404)

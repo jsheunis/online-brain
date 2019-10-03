@@ -21,6 +21,9 @@ var sprite_params = {
     nbSlice: {"X": 74, "Y": 84, "Z": 65},
     min: 0.0,
     max: 1269.0,
+    colorCrosshair: "#de101d",
+    flagCoordinates: true,
+    crosshair: true,
     affine: [
          [2.9729700088500977, 0.0, 0.0, -106.54425907135008],
          [0.0, 2.9729700088500977, 0.0, -119.65008878707886],
@@ -107,6 +110,8 @@ $("#btnSaveSettings").click(function() {
                 contentType: "application/json",
                 data: JSON.stringify({
                                         "experiment_name": experimentName,
+                                        "repetition_time": repetitionTime,
+                                        "number_of_volumes": maxNumberOfImages,
                                         "display_mode": displayMode,
                                         "overlay_filename": roiFileName
                                         }),
@@ -129,8 +134,24 @@ $("#btnSaveSettings").click(function() {
 
 });
 
+// "Start RT Simulation" button
+$("#startRTSimBtn").click(function() {
+    $.ajax({
+        url: "/api/sim/" + repetitionTime + "/" + maxNumberOfImages,
+        type: "GET",
+        success: function (response) {
+            console.log("Started RT simulation script", $(this));
+            $("#startRTSimBtn").attr("disabled", true);
+            $("#stopRTSimBtn").attr("disabled", false);
+        },
+        error: function (error) {
+            console.log(error);
+        }
+    });
+});
+
 /* ***************************************************************************
- * Slider, dropdown select and file selector control
+ * Slider, mode dropdown select, file selector control and experiment select
  * ***************************************************************************/
 
 $("#volume-range-slider").on("input", function(elem) {
@@ -161,6 +182,27 @@ $("#mode-select").on("change", function() {
 $("#roi_file").change(function(e) {
     roiFileName = e.target.files[0].name;
     $("label[for = customFile]").text(roiFileName);
+});
+
+
+$("#exp-dropdown").on("change", function() {
+    selectedExperiment = this.value;
+
+    if(selectedExperiment !== "none") {
+        $.ajax({
+            url: '/api/settings/' + selectedExperiment,
+            type: 'GET',
+            success: function (response) {
+                // Set values in corresponding fields
+                $("#exp_name").val(selectedExperiment);
+                $("#no_of_volumes").val(response.exp_volumes_nr);
+                $("#repetition_time").val(response.exp_repetition_time);
+            },
+            error: function (error) {
+                console.log('Error occurred while retrieving experiment data: ' + error);
+            }
+        });
+    }
 });
 
 
@@ -217,7 +259,7 @@ var addNewTrace = (voxel_coordinates) => {
 var extendCurrentTrace = (trace_id, voxel_coordinates) => {
     // Allow the extension on the x-axis only when the previous button has not
     // been pressed
-    if(!prevBtnPressed || currentImageID > previousPoint){
+    if(!prevBtnPressed || currentImageID > previousPoint) {
             if (trace_id === 0){
                 // If no trace has been added yet, then add a new one
                 addNewTrace(voxel_coordinates);

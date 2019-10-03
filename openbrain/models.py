@@ -20,6 +20,8 @@ class GeneratedImage(db.Model):
 class Experiment(db.Model):
     experiment_id = db.Column(db.Integer, primary_key=True)
     experiment_name = db.Column(db.String(128), index=True, unique=True)
+    number_of_volumes = db.Column(db.Integer)
+    repetition_time = db.Column(db.Integer)
 
     def __repr__(self):
         return '<Experiment {}>'.format(self.experiment_name)

@@ -13,7 +13,8 @@
 
         <div class="container-fluid">
             <form class="d-block" id="settingsForm">
-                    <h3>Basic settings</h3>
+                    <h3>Experiment settings</h3>
+                    <h6>Create a new experiment</h6>
                     <div class="form-group row">
                         <label for="exp_name" class="col-sm-2 col-form-label">Experiment name</label>
                         <div class="col-sm-10">
@@ -51,6 +52,19 @@
                         </div>
                     </div>
 
+                    <h6>Load an existing experiment</h6>
+                    <div class="form-group row">
+                        <label for="exp-dropdown" class="col-sm-2 col-form-label">Experiment name</label>
+                        <div class="col-sm-10">
+                            <select class="custom-select custom-select-sm" id="exp-dropdown">
+                                <option value="none" selected>...</option>
+                                {% for exp in exp_list %}
+                                <option value="{{ exp }}">{{ exp }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
                     <div class="form-group row">
                         <button type="button" class="btn btn-primary" id="btnSaveSettings">Save settings</button>
                     </div>
@@ -58,11 +72,13 @@
                       
             </form>
             <div class="d-none" id="vizControlButtons">
+                <h3>Real-time operation</h3>
+                <button type="button" class="btn btn-primary" id="startRTSimBtn">Start RT Simulation</button>
                 <button type="button" class="btn btn-primary" id="startRTBtn">START RT</button>
                 <button type="button" class="btn btn-danger" id="stopRTBtn">STOP RT</button>
-                <button type="button" class="btn btn-secondary" id="nextBtn">Next</button>
                 <button type="button" class="btn btn-secondary" id="prevBtn">Previous</button>
-                <p>Volume number: <span id="volumeNumber"></span></p>
+                <button type="button" class="btn btn-secondary" id="nextBtn">Next</button>
+                <p>Volume number: <span id="volumeNumber">Template</span></p>
                 <input type="range" min="1" max="1" value="1" id="volume-range-slider">
             </div>
             <div class="row align-items-center">
