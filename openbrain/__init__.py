@@ -23,10 +23,12 @@ def create_app():
 
     # Initialize application extensions
     from openbrain.models import db
+    from openbrain.common import socketio
 
     db.init_app(app)
     migrate.init_app(app, db)
     cache.init_app(app)
+    socketio.init_app(app)
 
     # Register the app blueprints
     from openbrain.settings.views import settings_bp

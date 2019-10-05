@@ -10,6 +10,7 @@ var roiFileName = null;
 var prevBtnPressed = false;
 var displayMode = "fMRI";
 var currentTraceID = 0;
+var socket = io();
 var brain;
 var experimentName;
 

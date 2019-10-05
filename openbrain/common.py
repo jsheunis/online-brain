@@ -5,10 +5,13 @@ app modules
 
 from enum import Enum
 from .models import GeneratedImage
+from flask_socketio import SocketIO
 
 SAMPLE_DATA_DIR = 'sample_data/'
 
 TEST_DATA_DIR = 'test_data/'
+
+socketio = SocketIO()
 
 
 class DisplayMode(Enum):
