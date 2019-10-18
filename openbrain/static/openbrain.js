@@ -10,6 +10,7 @@ var roiFileName = null;
 var prevBtnPressed = false;
 var displayMode = "fMRI";
 var currentTraceID = 0;
+var previousPoint;
 var brain;
 var experimentName;
 
@@ -76,6 +77,7 @@ $("#nextBtn").click(function() {
 // PREVIOUS button
 $("#prevBtn").click(function() {
     if (currentImageID > 1) {
+        previousPoint = currentImageID;
         currentImageID--;
         getSprite(currentImageID);
         prevBtnPressed = true;
@@ -132,7 +134,6 @@ $("#btnSaveSettings").click(function() {
 
 });
 
-
 // "Start RT Simulation" button
 $("#startRTSimBtn").click(function() {
     $.ajax({
@@ -159,6 +160,7 @@ $("#volume-range-slider").on("input", function(elem) {
     if (currentSliderValue < currentImageID) {
         clearInterval(interval);
         prevBtnPressed = true;
+        previousPoint = currentImageID;
     }
     currentImageID = currentSliderValue;
     getSprite(currentImageID);
@@ -228,7 +230,28 @@ var addNewTrace = (voxel_coordinates) => {
                     parseInt(voxel_coordinates.y) + ', ' +
                     parseInt(voxel_coordinates.z) + ')',
             line: {color: randomColor}
-        }]);
+        }], {
+        showlegend: true,
+        xaxis: {
+            title: {
+                text: "Volumes",
+                font: {
+                    size: 18,
+                    color: '#7f7f7f'
+                },
+             },
+            range: [1, maxNumberOfImages],
+        },
+        yaxis: {
+            title: {
+                text: "Analog units",
+                font: {
+                    size: 18,
+                    color: '#7f7f7f'
+                }
+            },
+        },
+        });
     });
 }
 
@@ -236,7 +259,7 @@ var addNewTrace = (voxel_coordinates) => {
 var extendCurrentTrace = (trace_id, voxel_coordinates) => {
     // Allow the extension on the x-axis only when the previous button has not
     // been pressed
-    if(!prevBtnPressed){
+    if(!prevBtnPressed || currentImageID > previousPoint) {
             if (trace_id === 0){
                 // If no trace has been added yet, then add a new one
                 addNewTrace(voxel_coordinates);
@@ -255,6 +278,15 @@ var extendCurrentTrace = (trace_id, voxel_coordinates) => {
             }
     }
 }
+
+
+var triggerHoverOnPlot = (imageID) => {
+    let pointNumber = parseInt(imageID) - 1;
+    Plotly.Fx.hover('voxel_value_graph', [
+        { curveNumber: 0, pointNumber: pointNumber },
+    ]);
+}
+
 
 /* ***************************************************************************
  * Data retrieval functions
@@ -277,6 +309,7 @@ var getSprite = (imageID) => {
                     };
 
                 extendCurrentTrace(currentTraceID, voxel_coordinates);
+                triggerHoverOnPlot(currentImageID);
             },
             error: function (error) {
                 // If an image is not found, then show modal
