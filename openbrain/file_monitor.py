@@ -7,7 +7,8 @@ import requests
 
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
-from openbrain.common import DisplayMode, SAMPLE_DATA_DIR, TEST_DATA_DIR
+from openbrain.common import DisplayMode, SAMPLE_DATA_DIR, TEST_DATA_DIR, \
+    socketio
 
 from .visualization import utils
 
@@ -53,57 +54,71 @@ class Handler(FileSystemEventHandler):
                 print("Received created event - %s." % event.src_path)
                 try:
                     if display_mode == DisplayMode.FMRI:
-                        # Load the generated volume and create sprite base64
-                        # and the corresponding JSON parameters
-                        bg_image = nibabel.load(event.src_path)
-                        sprite_b64, sprite_json = \
-                            utils.generate_background_sprite(bg_image)
-
-                        # Update request parameters in the request JSON
-                        # dictionary
-                        json_data["volume_name"] = str(event.src_path)
-                        json_data["sprite_b64"] = sprite_b64
-                        json_data["sprite_json"] = sprite_json.getvalue()
+                        display_fmri(event)
 
                     elif display_mode == DisplayMode.OVERLAY:
-                        # Load the generated image
-                        bg_image = nibabel.load(event.src_path)
+                        display_overlay(event)
 
-                        # Load the ROI image
-                        stat_map_img = nibabel.load(os.path.join(
-                            SAMPLE_DATA_DIR,
-                            ROI_FILE_NAME))
-
-                        # Get the JSON parameters of the sprite, and the
-                        # base64 encoded sprite, stat map and colormap
-                        sprite_json, sprite_b64, stat_map_b64, colormap_b64 = \
-                            utils.get_stat_map(
-                                stat_map_img,
-                                bg_image,
-                                opacity=0.7,
-                                annotate=True,
-                                colorbar=True)
-
-                        # Update request parameters in the request JSON
-                        # dictionary
-                        json_data["volume_name"] = str(event.src_path)
-                        json_data["sprite_b64"] = sprite_b64
-                        json_data["sprite_json"] = json.dumps(sprite_json)
-                        json_data["stat_map_b64"] = stat_map_b64
-                        json_data["colormap_b64"] = colormap_b64
-
-                    # Send the POST request in order to notify the server
-                    # regarding the newly generated image and the
-                    # corresponding sprites and parameters
-                    r = requests.post(DEFAULT_URL, json=json.dumps(
-                        json_data), headers=REQ_HEADERS)
-
-                    logger.log(logging.INFO, r)
+                    socketio.emit("new-volume", json_data["volume_name"])
                 except Exception as e:
                     logger.log(logging.WARN, str(e))
 
 
-# Initiate a watchdog observer
+def display_fmri(event):
+    # Load the generated volume and create sprite base64
+    # and the corresponding JSON parameters
+    bg_image = nibabel.load(event.src_path)
+    sprite_b64, sprite_json = \
+        utils.generate_background_sprite(bg_image)
+
+    make_request(str(event.src_path), sprite_b64, sprite_json)
+
+
+def display_overlay(event):
+    # Load the generated image
+    bg_image = nibabel.load(event.src_path)
+
+    # Load the ROI image
+    stat_map_img = nibabel.load(os.path.join(
+        SAMPLE_DATA_DIR,
+        ROI_FILE_NAME))
+
+    # Get the JSON parameters of the sprite, and the
+    # base64 encoded sprite, stat map and colormap
+    sprite_json, sprite_b64, stat_map_b64, colormap_b64 = \
+        utils.get_stat_map(
+            stat_map_img,
+            bg_image,
+            opacity=0.7,
+            annotate=True,
+            colorbar=True)
+
+    make_request(str(event.src_path), sprite_b64, sprite_json, stat_map_b64,
+                 colormap_b64)
+
+
+def make_request(vol_name, sprite_b64, sprite_json, stat_map_b64=None,
+                 colormap_b64=None):
+    # Update request parameters in the request JSON
+    # dictionary
+    json_data["volume_name"] = vol_name
+    json_data["sprite_b64"] = sprite_b64
+    json_data["sprite_json"] = sprite_json.getvalue()
+    json_data["stat_map_b64"] = \
+        stat_map_b64 if stat_map_b64 is not None else ''
+    json_data["colormap_b64"] = \
+        colormap_b64 if colormap_b64 is not None else ''
+
+    # Send a POST request in order to notify the server
+    # regarding the newly generated image and the
+    # corresponding sprites and parameters
+    r = requests.post(DEFAULT_URL, json=json.dumps(
+        json_data), headers=REQ_HEADERS)
+
+    logger.log(logging.INFO, r)
+
+
+# Initialize a watchdog observer
 observer = Observer()
 
 
