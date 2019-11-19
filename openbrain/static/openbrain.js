@@ -14,6 +14,7 @@ var socket = io();
 var availableVolumesData = [];
 var brain;
 var experimentName;
+var operationMode;
 
 // Default sprite params for template image
 var sprite_params = {
@@ -37,6 +38,7 @@ var sprite_params = {
 // Hide the file selector
 $( document ).ready(function(){
     $("#file-selector").addClass("d-none");
+    $("#exp-dropdown-col").addClass("d-none");
 });
 
 
@@ -175,6 +177,17 @@ $("#mode-select").on("change", function() {
     } else if (displayMode == "fMRI") {
         // Hide the file selector
         $("#file-selector").removeClass("d-block").addClass("d-none");
+    }
+});
+
+$("#operation-mode-select").on("change", function() {
+    operationMode = this.value;
+    if (operationMode === "real-time") {
+        $("#startRTSimBtn").removeClass("d-none");
+        $("#exp-dropdown-col").removeClass("d-block").addClass("d-none");
+    } else if (operationMode == "prev-experiment") {
+        $("#exp-dropdown-col").addClass("d-block");
+        $("#startRTSimBtn").addClass("d-none");
     }
 });
 
