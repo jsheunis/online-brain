@@ -7,8 +7,7 @@ import requests
 
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
-from openbrain.common import DisplayMode, SAMPLE_DATA_DIR, TEST_DATA_DIR, \
-    socketio
+from openbrain.common import DisplayMode, SAMPLE_DATA_DIR, TEST_DATA_DIR
 
 from .visualization import utils
 
@@ -59,7 +58,6 @@ class Handler(FileSystemEventHandler):
                     elif display_mode == DisplayMode.OVERLAY:
                         display_overlay(event)
 
-                    socketio.emit("new-volume", json_data["volume_name"])
                 except Exception as e:
                     logger.log(logging.WARN, str(e))
 

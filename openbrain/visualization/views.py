@@ -6,7 +6,7 @@ from flask import Blueprint, abort, jsonify, request
 
 from ..cache import cache
 from ..models import GeneratedImage, db
-from ..common import _get_image_entry_by_id
+from ..common import _get_image_entry_by_id, socketio
 from ..file_copy_script import MRIFileSimulator
 
 visualization_bp = Blueprint('visualization_bp', __name__)
@@ -34,16 +34,34 @@ def _create_generated_image_model(req_dict: Dict[str, str]):
     return image_model
 
 
+def _get_default_sprite_params():
+    sprite_params = {
+        'canvas': '3Dviewer',
+        'sprite': 'spriteImg',
+        'colorBackground': '#000000',
+        'crosshair': True,
+        'flagCoordinates': True,
+        'title': False,
+        'colorFont': '#ffffff',
+        'flagValue': False,
+        'colorCrosshair': '#de101d',
+        'voxelSize': '1',
+    }
+
+    return sprite_params
+
+
 @visualization_bp.route('/api/fs-event', methods=['POST'])
 def post_fs_event():
     if request.method == 'POST':
         if request.is_json:
             # Get JSON data from request
-            req_dict = request.get_json()
+            req_json = request.get_json()
+            req_dict = json.loads(req_json)
 
             # Create a GeneratedImage model from the JSON data
             # obtained earlier
-            image_model = _create_generated_image_model(json.loads(req_dict))
+            image_model = _create_generated_image_model(req_dict)
 
             # Add the GeneratedImage model to the current session
             db.session.add(image_model)
@@ -53,11 +71,17 @@ def post_fs_event():
                 db.session.commit()
                 logger.log(
                     logging.INFO, "New file location added to the database")
+
+                default_params = _get_default_sprite_params()
+                volume_data = {**default_params, **req_dict}
+                print(volume_data.keys())
+                socketio.emit("volume-data", volume_data)
                 return jsonify(success=True)
             except Exception as ex:
                 logger.log(logging.WARNING,
                            "Failed adding to the database: " + str(ex))
                 return jsonify(success=False)
+
 
         return jsonify(success=False)
 
@@ -82,18 +106,8 @@ def get_sprite(experiment_name, image_id):
 
             # Define the brainsprite params
             # noinspection PyDictCreation
-            sprite_params = {
-                'canvas': '3Dviewer',
-                'sprite': 'spriteImg',
-                'colorBackground': '#000000',
-                'crosshair': True,
-                'flagCoordinates': True,
-                'title': False,
-                'colorFont': '#ffffff',
-                'flagValue': False,
-                'colorCrosshair': '#de101d',
-                'voxelSize': '1',
-            }
+
+            sprite_params = _get_default_sprite_params()
 
             sprite_params['nbSlice'] = bg_params_json['nbSlice']
             sprite_params['affine'] = bg_params_json['affine']
