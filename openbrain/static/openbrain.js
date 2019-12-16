@@ -16,6 +16,12 @@ var brain;
 var experimentName;
 var operationMode;
 
+const DB_NAME = "openbrain";
+const DB_VERSION = 1;
+const DB_STORE_NAME = "rt-data";
+
+var db;
+
 // Default sprite params for template image
 var sprite_params = {
     canvas: "3Dviewer",
@@ -35,16 +41,47 @@ var sprite_params = {
     };
 
 
+var openDb = () => {
+    var req = indexedDB.open(DB_NAME, DB_VERSION);
+
+    req.onsuccess = function (evt) {
+      db = this.result;
+      console.log("openDb DONE");
+    };
+
+    req.onerror = function (evt) {
+        console.log("Permission for accessing IndexedDB is required");
+    };
+
+    req.onupgradeneeded = function (evt) {
+     console.log("openDb.onupgradeneeded");
+
+    var store = evt.currentTarget.result.createObjectStore(
+        DB_STORE_NAME);
+    };
+}
+
+var getObjectStore = (store_name, mode) => {
+    var tx = db.transaction(store_name, mode);
+    console.log(tx);
+    return tx.objectStore(store_name);
+}
+
 // Hide the file selector
 $( document ).ready(function(){
     $("#file-selector").addClass("d-none");
     $("#exp-dropdown-col").addClass("d-none");
+    openDb();
 });
 
 
 // Initialize the brainsprite canvas with template params
 $( window ).load(function(){
     brain = brainsprite(sprite_params);
+    if (!window.indexedDB) {
+    console.log("Your browser doesn't support a stable version of IndexedDB.");
+    }
+
 });
 
 /* ***************************************************************************
@@ -471,7 +508,32 @@ var updateSprite = (volume_data_dict) => {
 //    document.getElementById("volumeNumber").innerHTML = imageID;
 }
 
+var addRTData = (data) => {
+    var store = getObjectStore(DB_STORE_NAME, 'readwrite');
+    var req;
+
+    try {
+        console.log(data["data"]);
+        req = store.put(data["data"], data["data"]["experiment_name"].concat("_", currentImageID));
+    }
+    catch (e) {
+      throw e;
+    }
+
+    req.onsuccess = function (evt) {
+      console.log("Insertion in DB successful");
+    };
+
+    req.onerror = function() {
+      console.error("insertion in db error", this.error);
+    };
+  }
+
+
 socket.on('volume-data', function(req_dict) {
-    //availableVolumesData.push(req_obj)
     updateSprite(req_dict)
+
+    var volume_data = new Object();
+    volume_data["data"] = req_dict;
+    addRTData(volume_data);
 });
